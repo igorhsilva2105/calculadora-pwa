@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Avançada</title>
+    <title>Calculadora Avançada com TensorFlow.js</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.0.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -367,6 +370,12 @@
             background-color: var(--button-bg);
             margin-bottom: 8px;
             border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .history-item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
         .history-expression {
@@ -376,6 +385,27 @@
 
         .history-result {
             color: var(--operator-bg);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .hidden {
@@ -406,7 +436,7 @@
 <body>
     <div class="calculator-container">
         <div class="header">
-            <h1>Calculadora Avançada</h1>
+            <h1>Calculadora Inteligente</h1>
             <button class="menu-button" id="menu-button">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
@@ -496,6 +526,10 @@
                     <button class="special" id="capture"><i class="fas fa-camera"></i> Capturar</button>
                     <button class="clear" id="stop-camera"><i class="fas fa-stop"></i> Parar</button>
                 </div>
+                <div class="loading" id="camera-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span style="margin-left: 10px;">Processando imagem...</span>
+                </div>
                 <div id="camera-result" class="history"></div>
             </div>
         </div>
@@ -509,6 +543,10 @@
                     <button class="clear" id="clear-drawing"><i class="fas fa-trash"></i> Limpar</button>
                     <input type="color" id="drawing-color" value="#000000" title="Cor do desenho">
                     <input type="range" id="drawing-size" min="1" max="10" value="3" title="Espessura">
+                </div>
+                <div class="loading" id="drawing-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span style="margin-left: 10px;">Reconhecendo dígito...</span>
                 </div>
                 <div id="drawing-result" class="history"></div>
             </div>
@@ -534,7 +572,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Elementos da DOM
             const display = document.getElementById('display');
             const historyElement = document.getElementById('history');
@@ -552,6 +590,7 @@
             const stopCameraBtn = document.getElementById('stop-camera');
             const captureBtn = document.getElementById('capture');
             const cameraResult = document.getElementById('camera-result');
+            const cameraLoading = document.getElementById('camera-loading');
             
             // Elementos de desenho
             const drawingCanvas = document.getElementById('drawing-canvas');
@@ -560,6 +599,7 @@
             const drawingColor = document.getElementById('drawing-color');
             const drawingSize = document.getElementById('drawing-size');
             const drawingResult = document.getElementById('drawing-result');
+            const drawingLoading = document.getElementById('drawing-loading');
             
             // Elementos de gráfico
             const graphCanvas = document.getElementById('graph-canvas');
@@ -588,6 +628,10 @@
             
             // Gráfico
             let chart = null;
+            
+            // Modelos do TensorFlow.js
+            let mobilenetModel = null;
+            let digitRecognizerModel = null;
             
             // Constantes matemáticas
             const constants = {
@@ -619,6 +663,22 @@
             // Inicializar o canvas do gráfico
             function initGraphCanvas() {
                 // Será inicializado quando necessário
+            }
+            
+            // Carregar modelos do TensorFlow.js
+            async function loadTensorFlowModels() {
+                try {
+                    // Carregar MobileNet para reconhecimento de imagem
+                    mobilenetModel = await mobilenet.load();
+                    
+                    // Carregar modelo personalizado para reconhecimento de dígitos
+                    digitRecognizerModel = await tf.loadLayersModel('https://storage.googleapis.com/tfjs-models/tfjs/mnist_cnn/model.json');
+                    
+                    console.log('Modelos do TensorFlow.js carregados com sucesso');
+                } catch (error) {
+                    console.error('Erro ao carregar modelos:', error);
+                    alert('Erro ao carregar modelos de reconhecimento. Algumas funcionalidades podem não estar disponíveis.');
+                }
             }
             
             // Funções de desenho
@@ -688,16 +748,118 @@
                 }
             }
             
-            function captureEquation() {
+            async function captureEquation() {
                 if (!stream) {
                     cameraResult.textContent = 'Inicie a câmera primeiro.';
                     return;
                 }
                 
-                // Simulação de reconhecimento de equação
-                // Em uma implementação real, usaria uma biblioteca como Tesseract.js
-                cameraResult.textContent = 'Equação reconhecida: 2 + 2 = 4';
-                addToHistory('2 + 2', '4');
+                if (!mobilenetModel) {
+                    cameraResult.textContent = 'Modelo de reconhecimento não carregado.';
+                    return;
+                }
+                
+                cameraLoading.style.display = 'flex';
+                cameraResult.textContent = 'Processando imagem...';
+                
+                try {
+                    // Capturar imagem da câmera
+                    const canvas = document.createElement('canvas');
+                    canvas.width = cameraView.videoWidth;
+                    canvas.height = cameraView.videoHeight;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+                    
+                    // Usar MobileNet para classificação
+                    const predictions = await mobilenetModel.classify(canvas);
+                    
+                    // Verificar se há números ou equações nas previsões
+                    const mathTerms = predictions.filter(pred => 
+                        pred.className.toLowerCase().includes('digit') || 
+                        pred.className.toLowerCase().includes('number') ||
+                        pred.className.toLowerCase().includes('equation') ||
+                        pred.className.match(/\d+/)
+                    );
+                    
+                    if (mathTerms.length > 0) {
+                        // Tentar extrair números da previsão
+                        const numbers = mathTerms[0].className.match(/\d+/g);
+                        if (numbers && numbers.length > 0) {
+                            currentInput = numbers.join('');
+                            updateDisplay();
+                            cameraResult.textContent = `Número reconhecido: ${currentInput}`;
+                            addToHistory('Reconhecimento por câmera', currentInput);
+                        } else {
+                            cameraResult.textContent = `Reconhecido: ${mathTerms[0].className} (${Math.round(mathTerms[0].probability * 100)}%)`;
+                        }
+                    } else {
+                        cameraResult.textContent = 'Nenhum número ou equação reconhecido. Tente novamente.';
+                    }
+                } catch (error) {
+                    console.error('Erro no reconhecimento:', error);
+                    cameraResult.textContent = 'Erro no processamento da imagem.';
+                } finally {
+                    cameraLoading.style.display = 'none';
+                }
+            }
+            
+            // Reconhecer dígito desenhado
+            async function recognizeDigit() {
+                if (!digitRecognizerModel) {
+                    drawingResult.textContent = 'Modelo de reconhecimento de dígitos não carregado.';
+                    return;
+                }
+                
+                drawingLoading.style.display = 'flex';
+                drawingResult.textContent = 'Processando...';
+                
+                try {
+                    // Redimensionar e preparar a imagem para o modelo
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 28;
+                    tempCanvas.height = 28;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // Desenhar o conteúdo do canvas de desenho no canvas temporário com tamanho reduzido
+                    tempCtx.drawImage(drawingCanvas, 0, 0, 28, 28);
+                    
+                    // Obter dados de imagem
+                    const imgData = tempCtx.getImageData(0, 0, 28, 28);
+                    
+                    // Converter para tensor e pré-processar para o modelo MNIST
+                    let tensor = tf.browser.fromPixels(imgData, 1);
+                    tensor = tensor.resizeNearestNeighbor([28, 28]);
+                    tensor = tensor.toFloat();
+                    tensor = tensor.div(255.0);
+                    tensor = tensor.expandDims(0);
+                    
+                    // Fazer a previsão
+                    const predictions = await digitRecognizerModel.predict(tensor).data();
+                    
+                    // Encontrar o dígito com maior probabilidade
+                    const maxProbability = Math.max(...predictions);
+                    const digit = predictions.indexOf(maxProbability);
+                    
+                    // Adicionar o dígito à calculadora
+                    if (currentInput === '0' || shouldResetScreen) {
+                        currentInput = digit.toString();
+                        shouldResetScreen = false;
+                    } else {
+                        currentInput += digit.toString();
+                    }
+                    
+                    updateDisplay();
+                    drawingResult.textContent = `Dígito reconhecido: ${digit} (${Math.round(maxProbability * 100)}% de confiança)`;
+                    addToHistory('Reconhecimento de dígito', digit);
+                    
+                    // Liberar memória do tensor
+                    tensor.dispose();
+                } catch (error) {
+                    console.error('Erro no reconhecimento de dígito:', error);
+                    drawingResult.textContent = 'Erro no reconhecimento. Tente novamente.';
+                } finally {
+                    drawingLoading.style.display = 'none';
+                }
             }
             
             // Funções de gráfico
@@ -723,10 +885,15 @@
                     try {
                         // Avaliar a expressão - CUIDADO: eval é perigoso, use apenas para demonstração
                         // Em produção, use uma biblioteca de parsing matemático seguro
-                        y = eval(equation.replace(/x/g, `(${x})`).replace(/\\sqrt\{([^}]+)\}/g, 'Math.sqrt($1)'));
+                        y = eval(equation.replace(/x/g, `(${x})`).replace(/\^/g, '**'));
                     } catch (e) {
                         alert('Erro na equação: ' + e.message);
                         return;
+                    }
+                    
+                    // Verificar se y é um número válido
+                    if (isNaN(y) || !isFinite(y)) {
+                        continue;
                     }
                     
                     labels.push(x);
@@ -1144,12 +1311,7 @@
             captureBtn.addEventListener('click', captureEquation);
             
             // Event listeners para desenho
-            recognizeDrawingBtn.addEventListener('click', () => {
-                // Simulação de reconhecimento de desenho
-                drawingResult.textContent = 'Equação reconhecida: 5 × 3 = 15';
-                addToHistory('5 × 3', '15');
-            });
-            
+            recognizeDrawingBtn.addEventListener('click', recognizeDigit);
             clearDrawingBtn.addEventListener('click', clearDrawing);
             drawingColor.addEventListener('input', () => {
                 ctx.strokeStyle = drawingColor.value;
@@ -1194,6 +1356,7 @@
             updateDisplay();
             initDrawingCanvas();
             initGraphCanvas();
+            await loadTensorFlowModels();
         });
     </script>
 </body>
