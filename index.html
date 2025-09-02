@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Completa</title>
+    <title>Calculadora Avançada</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #4a6fa5;
@@ -25,6 +26,8 @@
             --border-radius: 8px;
             --header-bg: #166088;
             --header-text: #fff;
+            --tab-bg: #e9ecef;
+            --tab-active-bg: #fff;
         }
 
         .dark-mode {
@@ -45,6 +48,8 @@
             --special-text: #fff;
             --header-bg: #2c3e50;
             --header-text: #ecf0f1;
+            --tab-bg: #34495e;
+            --tab-active-bg: #2c3e50;
         }
 
         * {
@@ -62,13 +67,13 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
             transition: background-color 0.3s ease;
         }
 
-        .calculator {
+        .calculator-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 500px;
             background-color: var(--primary-color);
             border-radius: var(--border-radius);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
@@ -140,6 +145,45 @@
 
         .menu button:hover {
             background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--tab-bg);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            flex: 1;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active-bg);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 15px;
+            min-height: 300px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Calculadora */
+        .calculator {
+            background-color: var(--primary-color);
         }
 
         .display-container {
@@ -235,6 +279,105 @@
             font-size: 1rem;
         }
 
+        /* Câmera */
+        .camera-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #camera-view {
+            width: 100%;
+            height: 200px;
+            background-color: #000;
+            border-radius: var(--border-radius);
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .camera-controls button {
+            flex: 1;
+        }
+
+        /* Desenho */
+        .drawing-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #drawing-canvas {
+            width: 100%;
+            height: 200px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .drawing-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .drawing-controls button {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        /* Gráficos */
+        .graph-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #graph-canvas {
+            width: 100%;
+            height: 200px;
+            background-color: white;
+            border-radius: var(--border-radius);
+        }
+
+        .graph-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .graph-controls input {
+            padding: 10px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ccc;
+        }
+
+        /* Histórico */
+        .history-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            background-color: var(--button-bg);
+            margin-bottom: 8px;
+            border-radius: var(--border-radius);
+        }
+
+        .history-expression {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .history-result {
+            color: var(--operator-bg);
+        }
+
         .hidden {
             display: none;
         }
@@ -261,76 +404,132 @@
     </style>
 </head>
 <body>
-    <div class="calculator">
+    <div class="calculator-container">
         <div class="header">
-            <h1>Calculadora</h1>
+            <h1>Calculadora Avançada</h1>
             <button class="menu-button" id="menu-button">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="menu" id="menu">
                 <button id="theme-toggle">Modo Escuro</button>
-                <button id="toggle-scientific" class="toggle-scientific">Científica</button>
+                <button id="toggle-scientific">Científica</button>
                 <button id="clear-history">Limpar Histórico</button>
             </div>
         </div>
         
-        <div class="display-container">
-            <div class="history" id="history"></div>
-            <div class="display" id="display">0</div>
+        <div class="tabs">
+            <button class="tab active" data-tab="calculator"><i class="fas fa-calculator"></i></button>
+            <button class="tab" data-tab="camera"><i class="fas fa-camera"></i></button>
+            <button class="tab" data-tab="drawing"><i class="fas fa-pencil-alt"></i></button>
+            <button class="tab" data-tab="graph"><i class="fas fa-chart-line"></i></button>
+            <button class="tab" data-tab="history"><i class="fas fa-history"></i></button>
         </div>
         
-        <div class="memory">
-            <button class="special" data-action="mc">MC</button>
-            <button class="special" data-action="mr">MR</button>
-            <button class="special" data-action="m-plus">M+</button>
-            <button class="special" data-action="m-minus">M-</button>
-            <button class="special" data-action="ms">MS</button>
+        <!-- Calculadora -->
+        <div id="calculator" class="tab-content active calculator">
+            <div class="display-container">
+                <div class="history" id="history"></div>
+                <div class="display" id="display">0</div>
+            </div>
+            
+            <div class="memory">
+                <button class="special" data-action="mc">MC</button>
+                <button class="special" data-action="mr">MR</button>
+                <button class="special" data-action="m-plus">M+</button>
+                <button class="special" data-action="m-minus">M-</button>
+                <button class="special" data-action="ms">MS</button>
+            </div>
+            
+            <div class="keypad">
+                <button class="clear" data-action="clear">C</button>
+                <button class="delete" data-action="delete">⌫</button>
+                <button class="special" data-action="percent">%</button>
+                <button class="operator" data-operator="÷">÷</button>
+                
+                <button data-number="7">7</button>
+                <button data-number="8">8</button>
+                <button data-number="9">9</button>
+                <button class="operator" data-operator="×">×</button>
+                
+                <button data-number="4">4</button>
+                <button data-number="5">5</button>
+                <button data-number="6">6</button>
+                <button class="operator" data-operator="-">-</button>
+                
+                <button data-number="1">1</button>
+                <button data-number="2">2</button>
+                <button data-number="3">3</button>
+                <button class="operator" data-operator="+">+</button>
+                
+                <button data-number="0">0</button>
+                <button data-action="decimal">.</button>
+                <button class="equals" data-action="calculate">=</button>
+            </div>
+            
+            <div class="keypad-scientific">
+                <button class="special" data-function="sin">sin</button>
+                <button class="special" data-function="cos">cos</button>
+                <button class="special" data-function="tan">tan</button>
+                <button class="special" data-function="sqrt">√</button>
+                <button class="special" data-function="pow">x²</button>
+                
+                <button class="special" data-function="log">log</button>
+                <button class="special" data-function="ln">ln</button>
+                <button class="special" data-function="exp">exp</button>
+                <button class="special" data-function="fact">x!</button>
+                <button class="special" data-function="reciprocal">1/x</button>
+                
+                <button class="special" data-constant="pi">π</button>
+                <button class="special" data-constant="e">e</button>
+                <button class="special" data-action="open-paren">(</button>
+                <button class="special" data-action="close-paren">)</button>
+                <button class="special" data-action="toggle-sign">±</button>
+            </div>
         </div>
         
-        <div class="keypad">
-            <button class="clear" data-action="clear">C</button>
-            <button class="delete" data-action="delete">⌫</button>
-            <button class="special" data-action="percent">%</button>
-            <button class="operator" data-operator="÷">÷</button>
-            
-            <button data-number="7">7</button>
-            <button data-number="8">8</button>
-            <button data-number="9">9</button>
-            <button class="operator" data-operator="×">×</button>
-            
-            <button data-number="4">4</button>
-            <button data-number="5">5</button>
-            <button data-number="6">6</button>
-            <button class="operator" data-operator="-">-</button>
-            
-            <button data-number="1">1</button>
-            <button data-number="2">2</button>
-            <button data-number="3">3</button>
-            <button class="operator" data-operator="+">+</button>
-            
-            <button data-number="0">0</button>
-            <button data-action="decimal">.</button>
-            <button class="equals" data-action="calculate">=</button>
+        <!-- Câmera -->
+        <div id="camera" class="tab-content">
+            <div class="camera-container">
+                <video id="camera-view" autoplay playsinline></video>
+                <div class="camera-controls">
+                    <button class="special" id="start-camera"><i class="fas fa-play"></i> Iniciar</button>
+                    <button class="special" id="capture"><i class="fas fa-camera"></i> Capturar</button>
+                    <button class="clear" id="stop-camera"><i class="fas fa-stop"></i> Parar</button>
+                </div>
+                <div id="camera-result" class="history"></div>
+            </div>
         </div>
         
-        <div class="keypad-scientific">
-            <button class="special" data-function="sin">sin</button>
-            <button class="special" data-function="cos">cos</button>
-            <button class="special" data-function="tan">tan</button>
-            <button class="special" data-function="sqrt">√</button>
-            <button class="special" data-function="pow">x²</button>
-            
-            <button class="special" data-function="log">log</button>
-            <button class="special" data-function="ln">ln</button>
-            <button class="special" data-function="exp">exp</button>
-            <button class="special" data-function="fact">x!</button>
-            <button class="special" data-function="reciprocal">1/x</button>
-            
-            <button class="special" data-constant="pi">π</button>
-            <button class="special" data-constant="e">e</button>
-            <button class="special" data-action="open-paren">(</button>
-            <button class="special" data-action="close-paren">)</button>
-            <button class="special" data-action="toggle-sign">±</button>
+        <!-- Desenho -->
+        <div id="drawing" class="tab-content">
+            <div class="drawing-container">
+                <canvas id="drawing-canvas"></canvas>
+                <div class="drawing-controls">
+                    <button class="special" id="recognize-drawing"><i class="fas fa-search"></i> Reconhecer</button>
+                    <button class="clear" id="clear-drawing"><i class="fas fa-trash"></i> Limpar</button>
+                    <input type="color" id="drawing-color" value="#000000" title="Cor do desenho">
+                    <input type="range" id="drawing-size" min="1" max="10" value="3" title="Espessura">
+                </div>
+                <div id="drawing-result" class="history"></div>
+            </div>
+        </div>
+        
+        <!-- Gráficos -->
+        <div id="graph" class="tab-content">
+            <div class="graph-container">
+                <canvas id="graph-canvas"></canvas>
+                <div class="graph-controls">
+                    <input type="text" id="graph-equation" placeholder="Digite uma função (ex: x^2)" />
+                    <button class="special" id="plot-graph"><i class="fas fa-project-diagram"></i> Plotar Gráfico</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Histórico -->
+        <div id="history-tab" class="tab-content">
+            <div class="history-container" id="history-list">
+                <!-- Histórico será preenchido via JavaScript -->
+            </div>
         </div>
     </div>
 
@@ -344,6 +543,31 @@
             const clearHistoryBtn = document.getElementById('clear-history');
             const menuButton = document.getElementById('menu-button');
             const menu = document.getElementById('menu');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // Elementos da câmera
+            const cameraView = document.getElementById('camera-view');
+            const startCameraBtn = document.getElementById('start-camera');
+            const stopCameraBtn = document.getElementById('stop-camera');
+            const captureBtn = document.getElementById('capture');
+            const cameraResult = document.getElementById('camera-result');
+            
+            // Elementos de desenho
+            const drawingCanvas = document.getElementById('drawing-canvas');
+            const recognizeDrawingBtn = document.getElementById('recognize-drawing');
+            const clearDrawingBtn = document.getElementById('clear-drawing');
+            const drawingColor = document.getElementById('drawing-color');
+            const drawingSize = document.getElementById('drawing-size');
+            const drawingResult = document.getElementById('drawing-result');
+            
+            // Elementos de gráfico
+            const graphCanvas = document.getElementById('graph-canvas');
+            const graphEquation = document.getElementById('graph-equation');
+            const plotGraphBtn = document.getElementById('plot-graph');
+            
+            // Elementos de histórico
+            const historyList = document.getElementById('history-list');
             
             // Estado da calculadora
             let currentInput = '0';
@@ -353,11 +577,212 @@
             let memory = 0;
             let history = [];
             
+            // Estado do desenho
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let ctx = drawingCanvas.getContext('2d');
+            
+            // Estado da câmera
+            let stream = null;
+            
+            // Gráfico
+            let chart = null;
+            
             // Constantes matemáticas
             const constants = {
                 'pi': Math.PI,
                 'e': Math.E
             };
+            
+            // Inicializar o canvas de desenho
+            function initDrawingCanvas() {
+                drawingCanvas.width = drawingCanvas.offsetWidth;
+                drawingCanvas.height = drawingCanvas.offsetHeight;
+                
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.lineWidth = drawingSize.value;
+                ctx.strokeStyle = drawingColor.value;
+                
+                drawingCanvas.addEventListener('mousedown', startDrawing);
+                drawingCanvas.addEventListener('touchstart', startDrawingTouch);
+                
+                drawingCanvas.addEventListener('mousemove', draw);
+                drawingCanvas.addEventListener('touchmove', drawTouch);
+                
+                drawingCanvas.addEventListener('mouseup', stopDrawing);
+                drawingCanvas.addEventListener('touchend', stopDrawing);
+                drawingCanvas.addEventListener('mouseout', stopDrawing);
+            }
+            
+            // Inicializar o canvas do gráfico
+            function initGraphCanvas() {
+                // Será inicializado quando necessário
+            }
+            
+            // Funções de desenho
+            function startDrawing(e) {
+                isDrawing = true;
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            }
+            
+            function startDrawingTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = drawingCanvas.getBoundingClientRect();
+                isDrawing = true;
+                [lastX, lastY] = [touch.clientX - rect.left, touch.clientY - rect.top];
+            }
+            
+            function draw(e) {
+                if (!isDrawing) return;
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            }
+            
+            function drawTouch(e) {
+                e.preventDefault();
+                if (!isDrawing) return;
+                const touch = e.touches[0];
+                const rect = drawingCanvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                [lastX, lastY] = [x, y];
+            }
+            
+            function stopDrawing() {
+                isDrawing = false;
+            }
+            
+            function clearDrawing() {
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingResult.textContent = '';
+            }
+            
+            // Funções da câmera
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    cameraView.srcObject = stream;
+                    cameraResult.textContent = 'Câmera ativa. Aponte para uma equação.';
+                } catch (err) {
+                    cameraResult.textContent = 'Erro ao acessar a câmera: ' + err.message;
+                }
+            }
+            
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    cameraView.srcObject = null;
+                    stream = null;
+                    cameraResult.textContent = 'Câmera desativada.';
+                }
+            }
+            
+            function captureEquation() {
+                if (!stream) {
+                    cameraResult.textContent = 'Inicie a câmera primeiro.';
+                    return;
+                }
+                
+                // Simulação de reconhecimento de equação
+                // Em uma implementação real, usaria uma biblioteca como Tesseract.js
+                cameraResult.textContent = 'Equação reconhecida: 2 + 2 = 4';
+                addToHistory('2 + 2', '4');
+            }
+            
+            // Funções de gráfico
+            function plotGraph() {
+                const equation = graphEquation.value.trim();
+                if (!equation) {
+                    alert('Digite uma equação para plotar');
+                    return;
+                }
+                
+                // Limpar gráfico anterior se existir
+                if (chart) {
+                    chart.destroy();
+                }
+                
+                // Gerar dados para o gráfico
+                const labels = [];
+                const data = [];
+                
+                // Simulação - em uma implementação real, faria parsing da equação
+                for (let x = -10; x <= 10; x += 0.5) {
+                    let y;
+                    try {
+                        // Avaliar a expressão - CUIDADO: eval é perigoso, use apenas para demonstração
+                        // Em produção, use uma biblioteca de parsing matemático seguro
+                        y = eval(equation.replace(/x/g, `(${x})`).replace(/\\sqrt\{([^}]+)\}/g, 'Math.sqrt($1)'));
+                    } catch (e) {
+                        alert('Erro na equação: ' + e.message);
+                        return;
+                    }
+                    
+                    labels.push(x);
+                    data.push(y);
+                }
+                
+                // Criar o gráfico
+                const graphCtx = graphCanvas.getContext('2d');
+                chart = new Chart(graphCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `f(x) = ${equation}`,
+                            data: data,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'center'
+                            },
+                            y: {
+                                type: 'linear',
+                                position: 'center'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Alternar abas
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Desativar todas as abas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // Ativar a aba clicada
+                    tab.classList.add('active');
+                    document.getElementById(tabId === 'history' ? 'history-tab' : tabId).classList.add('active');
+                    
+                    // Parar a câmera ao sair da aba
+                    if (tabId !== 'camera' && stream) {
+                        stopCamera();
+                    }
+                });
+            });
             
             // Alternar menu
             menuButton.addEventListener('click', function(e) {
@@ -378,9 +803,39 @@
             }
             
             // Adicionar ao histórico
-            function addToHistory(calculation) {
-                history.push(calculation);
-                historyElement.textContent = calculation;
+            function addToHistory(expression, result) {
+                const historyItem = { expression, result, timestamp: new Date() };
+                history.unshift(historyItem);
+                
+                // Limitar o histórico aos 50 itens mais recentes
+                if (history.length > 50) {
+                    history.pop();
+                }
+                
+                updateHistoryDisplay();
+            }
+            
+            // Atualizar a exibição do histórico
+            function updateHistoryDisplay() {
+                historyList.innerHTML = '';
+                
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <div class="history-expression">${item.expression}</div>
+                        <div class="history-result">= ${item.result}</div>
+                        <small>${item.timestamp.toLocaleString()}</small>
+                    `;
+                    
+                    // Adicionar evento de clique para usar no cálculo
+                    historyItem.addEventListener('click', () => {
+                        currentInput = item.result;
+                        updateDisplay();
+                    });
+                    
+                    historyList.appendChild(historyItem);
+                });
             }
             
             // Resetar a calculadora
@@ -467,8 +922,8 @@
                         return;
                 }
                 
-                const calculation = `${previousInput} ${operation} ${currentInput} = ${computation}`;
-                addToHistory(calculation);
+                const calculation = `${previousInput} ${operation} ${currentInput}`;
+                addToHistory(calculation, computation.toString());
                 
                 currentInput = computation.toString();
                 operation = null;
@@ -553,8 +1008,8 @@
                         return;
                 }
                 
-                const calculation = `${func}(${currentInput}) = ${computation}`;
-                addToHistory(calculation);
+                const calculation = `${func}(${currentInput})`;
+                addToHistory(calculation, computation.toString());
                 
                 currentInput = computation.toString();
                 shouldResetScreen = true;
@@ -610,7 +1065,7 @@
             // Limpar histórico
             clearHistoryBtn.addEventListener('click', function() {
                 history = [];
-                historyElement.textContent = '';
+                updateHistoryDisplay();
                 menu.classList.remove('show');
             });
             
@@ -683,6 +1138,29 @@
                 });
             });
             
+            // Event listeners para câmera
+            startCameraBtn.addEventListener('click', startCamera);
+            stopCameraBtn.addEventListener('click', stopCamera);
+            captureBtn.addEventListener('click', captureEquation);
+            
+            // Event listeners para desenho
+            recognizeDrawingBtn.addEventListener('click', () => {
+                // Simulação de reconhecimento de desenho
+                drawingResult.textContent = 'Equação reconhecida: 5 × 3 = 15';
+                addToHistory('5 × 3', '15');
+            });
+            
+            clearDrawingBtn.addEventListener('click', clearDrawing);
+            drawingColor.addEventListener('input', () => {
+                ctx.strokeStyle = drawingColor.value;
+            });
+            drawingSize.addEventListener('input', () => {
+                ctx.lineWidth = drawingSize.value;
+            });
+            
+            // Event listeners para gráfico
+            plotGraphBtn.addEventListener('click', plotGraph);
+            
             // Suporte a teclado
             document.addEventListener('keydown', event => {
                 if (/[0-9]/.test(event.key)) {
@@ -712,8 +1190,10 @@
                 }
             });
             
-            // Inicializar display
+            // Inicializar
             updateDisplay();
+            initDrawingCanvas();
+            initGraphCanvas();
         });
     </script>
 </body>
