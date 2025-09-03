@@ -1,1363 +1,218 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Avançada com TensorFlow.js</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.0.4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Calculadora Avançada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary-color: #4a6fa5;
-            --secondary-color: #166088;
-            --background-color: #f5f5f5;
-            --display-bg: #222;
-            --button-bg: #fff;
-            --button-text: #333;
-            --button-shadow: #ccc;
-            --operator-bg: #f0ad4e;
-            --operator-text: #fff;
-            --equals-bg: #5cb85c;
-            --equals-text: #fff;
-            --clear-bg: #d9534f;
-            --clear-text: #fff;
-            --special-bg: #5bc0de;
-            --special-text: #fff;
-            --border-radius: 8px;
-            --header-bg: #166088;
-            --header-text: #fff;
-            --tab-bg: #e9ecef;
-            --tab-active-bg: #fff;
-        }
-
-        .dark-mode {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --background-color: #2c3e50;
-            --display-bg: #1c1c1c;
-            --button-bg: #34495e;
-            --button-text: #ecf0f1;
-            --button-shadow: #2c3e50;
-            --operator-bg: #f39c12;
-            --operator-text: #fff;
-            --equals-bg: #27ae60;
-            --equals-text: #fff;
-            --clear-bg: #e74c3c;
-            --clear-text: #fff;
-            --special-bg: #3498db;
-            --special-text: #fff;
-            --header-bg: #2c3e50;
-            --header-text: #ecf0f1;
-            --tab-bg: #34495e;
-            --tab-active-bg: #2c3e50;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background-color: var(--background-color);
-            color: var(--button-text);
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            padding: 10px;
-            transition: background-color 0.3s ease;
-        }
-
-        .calculator-container {
-            width: 100%;
-            max-width: 500px;
-            background-color: var(--primary-color);
-            border-radius: var(--border-radius);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
-            background-color: var(--header-bg);
-            color: var(--header-text);
+            height: 100vh;
+            margin: 0;
+            padding: 1rem;
         }
 
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 500;
-        }
-
-        .menu-button {
-            background: none;
-            border: none;
-            color: var(--header-text);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s;
-        }
-
-        .menu-button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .menu {
-            position: absolute;
-            top: 70px;
-            right: 20px;
-            background-color: var(--header-bg);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 10px 0;
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            min-width: 180px;
-        }
-
-        .menu.show {
-            display: flex;
-        }
-
-        .menu button {
-            background: none;
-            border: none;
-            color: var(--header-text);
-            padding: 12px 20px;
-            text-align: left;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-size: 1rem;
-        }
-
-        .menu button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .tabs {
-            display: flex;
-            background-color: var(--tab-bg);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .tab {
-            padding: 12px 16px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            flex: 1;
-            text-align: center;
-            transition: background-color 0.3s;
-        }
-
-        .tab.active {
-            background-color: var(--tab-active-bg);
-            font-weight: bold;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 15px;
-            min-height: 300px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Calculadora */
         .calculator {
-            background-color: var(--primary-color);
-        }
-
-        .display-container {
-            background-color: var(--display-bg);
-            padding: 20px;
-            text-align: right;
-            position: relative;
-        }
-
-        .history {
-            min-height: 20px;
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 5px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            background-color: #fff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .display {
-            font-size: 2.5rem;
-            font-weight: 300;
-            color: white;
-            min-height: 60px;
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 1rem;
+            border-radius: 1rem;
+            text-align: right;
             overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .memory {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 15px;
-            gap: 8px;
-            background-color: var(--secondary-color);
+        #history {
+            font-size: 0.875rem;
+            color: #6b7280;
+            min-height: 1.25rem;
         }
 
-        .memory button {
-            flex: 1;
-            padding: 10px 5px;
-            font-size: 0.9rem;
+        #result {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
         }
 
-        .keypad {
+        .grid-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            padding: 15px;
+            gap: 0.75rem;
         }
 
-        .keypad-scientific {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        button {
-            border: none;
-            padding: 16px 5px;
-            font-size: 1.2rem;
-            border-radius: var(--border-radius);
+        .btn {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            font-size: 1.25rem;
+            font-weight: 500;
+            border-radius: 9999px;
+            padding: 1rem 0;
             cursor: pointer;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            box-shadow: 0 2px 5px var(--button-shadow);
-            transition: all 0.1s ease;
-            touch-action: manipulation;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background-color: #d1d5db;
         }
 
-        button:active {
-            transform: scale(0.95);
-            box-shadow: 0 1px 2px var(--button-shadow);
+        .btn.operator {
+            background-color: #6366f1;
+            color: #fff;
         }
 
-        .operator {
-            background-color: var(--operator-bg);
-            color: var(--operator-text);
+        .btn.operator:hover {
+            background-color: #4f46e5;
         }
 
-        .equals {
-            background-color: var(--equals-bg);
-            color: var(--equals-text);
+        .btn.clear {
+            background-color: #fca5a5;
+            color: #991b1b;
         }
 
-        .clear, .delete {
-            background-color: var(--clear-bg);
-            color: var(--clear-text);
+        .btn.clear:hover {
+            background-color: #f87171;
         }
 
-        .special {
-            background-color: var(--special-bg);
-            color: var(--special-text);
-            font-size: 1rem;
+        .btn.equal {
+            background-color: #10b981;
+            color: #fff;
+            grid-column: span 2;
+        }
+        
+        .btn.equal:hover {
+            background-color: #059669;
         }
 
-        /* Câmera */
-        .camera-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        #camera-view {
-            width: 100%;
-            height: 200px;
-            background-color: #000;
-            border-radius: var(--border-radius);
-        }
-
-        .camera-controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .camera-controls button {
-            flex: 1;
-        }
-
-        /* Desenho */
-        .drawing-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        #drawing-canvas {
-            width: 100%;
-            height: 200px;
-            background-color: white;
-            border-radius: var(--border-radius);
-            touch-action: none;
-            cursor: crosshair;
-        }
-
-        .drawing-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .drawing-controls button {
-            flex: 1;
-            min-width: 80px;
-        }
-
-        /* Gráficos */
-        .graph-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        #graph-canvas {
-            width: 100%;
-            height: 200px;
-            background-color: white;
-            border-radius: var(--border-radius);
-        }
-
-        .graph-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .graph-controls input {
-            padding: 10px;
-            border-radius: var(--border-radius);
-            border: 1px solid #ccc;
-        }
-
-        /* Histórico */
-        .history-container {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .history-item {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            background-color: var(--button-bg);
-            margin-bottom: 8px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .history-item:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .history-expression {
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .history-result {
-            color: var(--operator-bg);
-        }
-
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-left-color: var(--primary-color);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @media (min-width: 768px) {
-            .keypad-scientific {
-                display: grid !important;
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .calculator {
+                padding: 1rem;
             }
-            
-            .toggle-scientific {
-                display: none;
+            #result {
+                font-size: 1.5rem;
             }
-        }
-
-        @media (max-width: 767px) {
-            .keypad-scientific {
-                display: none;
+            .btn {
+                font-size: 1rem;
+                padding: 0.75rem 0;
             }
-            
-            .scientific-visible .keypad-scientific {
-                display: grid;
+            .grid-container {
+                gap: 0.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="calculator-container">
-        <div class="header">
-            <h1>Calculadora Inteligente</h1>
-            <button class="menu-button" id="menu-button">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <div class="menu" id="menu">
-                <button id="theme-toggle">Modo Escuro</button>
-                <button id="toggle-scientific">Científica</button>
-                <button id="clear-history">Limpar Histórico</button>
-            </div>
+
+    <div class="calculator">
+        <div class="display">
+            <div id="history" class="text-sm text-gray-500"></div>
+            <div id="result" class="text-3xl font-bold">0</div>
         </div>
-        
-        <div class="tabs">
-            <button class="tab active" data-tab="calculator"><i class="fas fa-calculator"></i></button>
-            <button class="tab" data-tab="camera"><i class="fas fa-camera"></i></button>
-            <button class="tab" data-tab="drawing"><i class="fas fa-pencil-alt"></i></button>
-            <button class="tab" data-tab="graph"><i class="fas fa-chart-line"></i></button>
-            <button class="tab" data-tab="history"><i class="fas fa-history"></i></button>
-        </div>
-        
-        <!-- Calculadora -->
-        <div id="calculator" class="tab-content active calculator">
-            <div class="display-container">
-                <div class="history" id="history"></div>
-                <div class="display" id="display">0</div>
-            </div>
+
+        <div class="grid-container">
+            <button class="btn clear" onclick="clearResult()">C</button>
+            <button class="btn clear" onclick="deleteLast()">CE</button>
+            <button class="btn operator" onclick="appendToDisplay('%')">%</button>
+            <button class="btn operator" onclick="appendToDisplay('/')">/</button>
+
+            <button class="btn" onclick="appendToDisplay('7')">7</button>
+            <button class="btn" onclick="appendToDisplay('8')">8</button>
+            <button class="btn" onclick="appendToDisplay('9')">9</button>
+            <button class="btn operator" onclick="appendToDisplay('*')">*</button>
+
+            <button class="btn" onclick="appendToDisplay('4')">4</button>
+            <button class="btn" onclick="appendToDisplay('5')">5</button>
+            <button class="btn" onclick="appendToDisplay('6')">6</button>
+            <button class="btn operator" onclick="appendToDisplay('-')">-</button>
+
+            <button class="btn" onclick="appendToDisplay('1')">1</button>
+            <button class="btn" onclick="appendToDisplay('2')">2</button>
+            <button class="btn" onclick="appendToDisplay('3')">3</button>
+            <button class="btn operator" onclick="appendToDisplay('+')">+</button>
             
-            <div class="memory">
-                <button class="special" data-action="mc">MC</button>
-                <button class="special" data-action="mr">MR</button>
-                <button class="special" data-action="m-plus">M+</button>
-                <button class="special" data-action="m-minus">M-</button>
-                <button class="special" data-action="ms">MS</button>
-            </div>
-            
-            <div class="keypad">
-                <button class="clear" data-action="clear">C</button>
-                <button class="delete" data-action="delete">⌫</button>
-                <button class="special" data-action="percent">%</button>
-                <button class="operator" data-operator="÷">÷</button>
-                
-                <button data-number="7">7</button>
-                <button data-number="8">8</button>
-                <button data-number="9">9</button>
-                <button class="operator" data-operator="×">×</button>
-                
-                <button data-number="4">4</button>
-                <button data-number="5">5</button>
-                <button data-number="6">6</button>
-                <button class="operator" data-operator="-">-</button>
-                
-                <button data-number="1">1</button>
-                <button data-number="2">2</button>
-                <button data-number="3">3</button>
-                <button class="operator" data-operator="+">+</button>
-                
-                <button data-number="0">0</button>
-                <button data-action="decimal">.</button>
-                <button class="equals" data-action="calculate">=</button>
-            </div>
-            
-            <div class="keypad-scientific">
-                <button class="special" data-function="sin">sin</button>
-                <button class="special" data-function="cos">cos</button>
-                <button class="special" data-function="tan">tan</button>
-                <button class="special" data-function="sqrt">√</button>
-                <button class="special" data-function="pow">x²</button>
-                
-                <button class="special" data-function="log">log</button>
-                <button class="special" data-function="ln">ln</button>
-                <button class="special" data-function="exp">exp</button>
-                <button class="special" data-function="fact">x!</button>
-                <button class="special" data-function="reciprocal">1/x</button>
-                
-                <button class="special" data-constant="pi">π</button>
-                <button class="special" data-constant="e">e</button>
-                <button class="special" data-action="open-paren">(</button>
-                <button class="special" data-action="close-paren">)</button>
-                <button class="special" data-action="toggle-sign">±</button>
-            </div>
-        </div>
-        
-        <!-- Câmera -->
-        <div id="camera" class="tab-content">
-            <div class="camera-container">
-                <video id="camera-view" autoplay playsinline></video>
-                <div class="camera-controls">
-                    <button class="special" id="start-camera"><i class="fas fa-play"></i> Iniciar</button>
-                    <button class="special" id="capture"><i class="fas fa-camera"></i> Capturar</button>
-                    <button class="clear" id="stop-camera"><i class="fas fa-stop"></i> Parar</button>
-                </div>
-                <div class="loading" id="camera-loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <span style="margin-left: 10px;">Processando imagem...</span>
-                </div>
-                <div id="camera-result" class="history"></div>
-            </div>
-        </div>
-        
-        <!-- Desenho -->
-        <div id="drawing" class="tab-content">
-            <div class="drawing-container">
-                <canvas id="drawing-canvas"></canvas>
-                <div class="drawing-controls">
-                    <button class="special" id="recognize-drawing"><i class="fas fa-search"></i> Reconhecer</button>
-                    <button class="clear" id="clear-drawing"><i class="fas fa-trash"></i> Limpar</button>
-                    <input type="color" id="drawing-color" value="#000000" title="Cor do desenho">
-                    <input type="range" id="drawing-size" min="1" max="10" value="3" title="Espessura">
-                </div>
-                <div class="loading" id="drawing-loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <span style="margin-left: 10px;">Reconhecendo dígito...</span>
-                </div>
-                <div id="drawing-result" class="history"></div>
-            </div>
-        </div>
-        
-        <!-- Gráficos -->
-        <div id="graph" class="tab-content">
-            <div class="graph-container">
-                <canvas id="graph-canvas"></canvas>
-                <div class="graph-controls">
-                    <input type="text" id="graph-equation" placeholder="Digite uma função (ex: x^2)" />
-                    <button class="special" id="plot-graph"><i class="fas fa-project-diagram"></i> Plotar Gráfico</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Histórico -->
-        <div id="history-tab" class="tab-content">
-            <div class="history-container" id="history-list">
-                <!-- Histórico será preenchido via JavaScript -->
-            </div>
+            <button class="btn" onclick="appendToDisplay('0')">0</button>
+            <button class="btn" onclick="appendToDisplay('.')">.</button>
+            <button class="btn equal" onclick="calculate()">=</button>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Elementos da DOM
-            const display = document.getElementById('display');
-            const historyElement = document.getElementById('history');
-            const themeToggle = document.getElementById('theme-toggle');
-            const toggleScientific = document.getElementById('toggle-scientific');
-            const clearHistoryBtn = document.getElementById('clear-history');
-            const menuButton = document.getElementById('menu-button');
-            const menu = document.getElementById('menu');
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            // Elementos da câmera
-            const cameraView = document.getElementById('camera-view');
-            const startCameraBtn = document.getElementById('start-camera');
-            const stopCameraBtn = document.getElementById('stop-camera');
-            const captureBtn = document.getElementById('capture');
-            const cameraResult = document.getElementById('camera-result');
-            const cameraLoading = document.getElementById('camera-loading');
-            
-            // Elementos de desenho
-            const drawingCanvas = document.getElementById('drawing-canvas');
-            const recognizeDrawingBtn = document.getElementById('recognize-drawing');
-            const clearDrawingBtn = document.getElementById('clear-drawing');
-            const drawingColor = document.getElementById('drawing-color');
-            const drawingSize = document.getElementById('drawing-size');
-            const drawingResult = document.getElementById('drawing-result');
-            const drawingLoading = document.getElementById('drawing-loading');
-            
-            // Elementos de gráfico
-            const graphCanvas = document.getElementById('graph-canvas');
-            const graphEquation = document.getElementById('graph-equation');
-            const plotGraphBtn = document.getElementById('plot-graph');
-            
-            // Elementos de histórico
-            const historyList = document.getElementById('history-list');
-            
-            // Estado da calculadora
-            let currentInput = '0';
-            let previousInput = '';
-            let operation = null;
-            let shouldResetScreen = false;
-            let memory = 0;
-            let history = [];
-            
-            // Estado do desenho
-            let isDrawing = false;
-            let lastX = 0;
-            let lastY = 0;
-            let ctx = drawingCanvas.getContext('2d');
-            
-            // Estado da câmera
-            let stream = null;
-            
-            // Gráfico
-            let chart = null;
-            
-            // Modelos do TensorFlow.js
-            let mobilenetModel = null;
-            let digitRecognizerModel = null;
-            
-            // Constantes matemáticas
-            const constants = {
-                'pi': Math.PI,
-                'e': Math.E
-            };
-            
-            // Inicializar o canvas de desenho
-            function initDrawingCanvas() {
-                drawingCanvas.width = drawingCanvas.offsetWidth;
-                drawingCanvas.height = drawingCanvas.offsetHeight;
-                
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
-                ctx.lineWidth = drawingSize.value;
-                ctx.strokeStyle = drawingColor.value;
-                
-                drawingCanvas.addEventListener('mousedown', startDrawing);
-                drawingCanvas.addEventListener('touchstart', startDrawingTouch);
-                
-                drawingCanvas.addEventListener('mousemove', draw);
-                drawingCanvas.addEventListener('touchmove', drawTouch);
-                
-                drawingCanvas.addEventListener('mouseup', stopDrawing);
-                drawingCanvas.addEventListener('touchend', stopDrawing);
-                drawingCanvas.addEventListener('mouseout', stopDrawing);
+        const resultDisplay = document.getElementById('result');
+        const historyDisplay = document.getElementById('history');
+        let currentExpression = '';
+        let result = '';
+
+        // Função para limpar o display e a expressão
+        function clearResult() {
+            currentExpression = '';
+            result = '';
+            resultDisplay.textContent = '0';
+            historyDisplay.textContent = '';
+        }
+
+        // Função para apagar o último caractere
+        function deleteLast() {
+            currentExpression = currentExpression.slice(0, -1);
+            resultDisplay.textContent = currentExpression || '0';
+        }
+
+        // Função para adicionar caracteres ao display
+        function appendToDisplay(value) {
+            // Se o resultado de uma operação anterior estiver no display, reinicia a expressão
+            if (result !== '') {
+                currentExpression = '';
+                result = '';
             }
             
-            // Inicializar o canvas do gráfico
-            function initGraphCanvas() {
-                // Será inicializado quando necessário
+            // Impede múltiplos operadores seguidos
+            const lastChar = currentExpression.slice(-1);
+            const isLastCharOperator = ['+', '-', '*', '/', '%'].includes(lastChar);
+            const isNewCharOperator = ['+', '-', '*', '/', '%'].includes(value);
+
+            if (isLastCharOperator && isNewCharOperator) {
+                currentExpression = currentExpression.slice(0, -1) + value;
+            } else {
+                currentExpression += value;
             }
             
-            // Carregar modelos do TensorFlow.js
-            async function loadTensorFlowModels() {
-                try {
-                    // Carregar MobileNet para reconhecimento de imagem
-                    mobilenetModel = await mobilenet.load();
-                    
-                    // Carregar modelo personalizado para reconhecimento de dígitos
-                    digitRecognizerModel = await tf.loadLayersModel('https://storage.googleapis.com/tfjs-models/tfjs/mnist_cnn/model.json');
-                    
-                    console.log('Modelos do TensorFlow.js carregados com sucesso');
-                } catch (error) {
-                    console.error('Erro ao carregar modelos:', error);
-                    alert('Erro ao carregar modelos de reconhecimento. Algumas funcionalidades podem não estar disponíveis.');
-                }
+            resultDisplay.textContent = currentExpression;
+        }
+
+        // Função para calcular o resultado
+        function calculate() {
+            try {
+                // A função eval() é usada para calcular o resultado da string da expressão.
+                // É importante usar com cuidado, mas para uma calculadora simples, é eficaz.
+                const finalResult = eval(currentExpression);
+                historyDisplay.textContent = currentExpression + ' =';
+                resultDisplay.textContent = finalResult;
+                currentExpression = String(finalResult);
+                result = finalResult;
+            } catch (error) {
+                historyDisplay.textContent = '';
+                resultDisplay.textContent = 'Erro';
+                currentExpression = '';
+                result = '';
             }
-            
-            // Funções de desenho
-            function startDrawing(e) {
-                isDrawing = true;
-                [lastX, lastY] = [e.offsetX, e.offsetY];
-            }
-            
-            function startDrawingTouch(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const rect = drawingCanvas.getBoundingClientRect();
-                isDrawing = true;
-                [lastX, lastY] = [touch.clientX - rect.left, touch.clientY - rect.top];
-            }
-            
-            function draw(e) {
-                if (!isDrawing) return;
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(e.offsetX, e.offsetY);
-                ctx.stroke();
-                [lastX, lastY] = [e.offsetX, e.offsetY];
-            }
-            
-            function drawTouch(e) {
-                e.preventDefault();
-                if (!isDrawing) return;
-                const touch = e.touches[0];
-                const rect = drawingCanvas.getBoundingClientRect();
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                [lastX, lastY] = [x, y];
-            }
-            
-            function stopDrawing() {
-                isDrawing = false;
-            }
-            
-            function clearDrawing() {
-                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-                drawingResult.textContent = '';
-            }
-            
-            // Funções da câmera
-            async function startCamera() {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    cameraView.srcObject = stream;
-                    cameraResult.textContent = 'Câmera ativa. Aponte para uma equação.';
-                } catch (err) {
-                    cameraResult.textContent = 'Erro ao acessar a câmera: ' + err.message;
-                }
-            }
-            
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    cameraView.srcObject = null;
-                    stream = null;
-                    cameraResult.textContent = 'Câmera desativada.';
-                }
-            }
-            
-            async function captureEquation() {
-                if (!stream) {
-                    cameraResult.textContent = 'Inicie a câmera primeiro.';
-                    return;
-                }
-                
-                if (!mobilenetModel) {
-                    cameraResult.textContent = 'Modelo de reconhecimento não carregado.';
-                    return;
-                }
-                
-                cameraLoading.style.display = 'flex';
-                cameraResult.textContent = 'Processando imagem...';
-                
-                try {
-                    // Capturar imagem da câmera
-                    const canvas = document.createElement('canvas');
-                    canvas.width = cameraView.videoWidth;
-                    canvas.height = cameraView.videoHeight;
-                    const context = canvas.getContext('2d');
-                    context.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
-                    
-                    // Usar MobileNet para classificação
-                    const predictions = await mobilenetModel.classify(canvas);
-                    
-                    // Verificar se há números ou equações nas previsões
-                    const mathTerms = predictions.filter(pred => 
-                        pred.className.toLowerCase().includes('digit') || 
-                        pred.className.toLowerCase().includes('number') ||
-                        pred.className.toLowerCase().includes('equation') ||
-                        pred.className.match(/\d+/)
-                    );
-                    
-                    if (mathTerms.length > 0) {
-                        // Tentar extrair números da previsão
-                        const numbers = mathTerms[0].className.match(/\d+/g);
-                        if (numbers && numbers.length > 0) {
-                            currentInput = numbers.join('');
-                            updateDisplay();
-                            cameraResult.textContent = `Número reconhecido: ${currentInput}`;
-                            addToHistory('Reconhecimento por câmera', currentInput);
-                        } else {
-                            cameraResult.textContent = `Reconhecido: ${mathTerms[0].className} (${Math.round(mathTerms[0].probability * 100)}%)`;
-                        }
-                    } else {
-                        cameraResult.textContent = 'Nenhum número ou equação reconhecido. Tente novamente.';
-                    }
-                } catch (error) {
-                    console.error('Erro no reconhecimento:', error);
-                    cameraResult.textContent = 'Erro no processamento da imagem.';
-                } finally {
-                    cameraLoading.style.display = 'none';
-                }
-            }
-            
-            // Reconhecer dígito desenhado
-            async function recognizeDigit() {
-                if (!digitRecognizerModel) {
-                    drawingResult.textContent = 'Modelo de reconhecimento de dígitos não carregado.';
-                    return;
-                }
-                
-                drawingLoading.style.display = 'flex';
-                drawingResult.textContent = 'Processando...';
-                
-                try {
-                    // Redimensionar e preparar a imagem para o modelo
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = 28;
-                    tempCanvas.height = 28;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    
-                    // Desenhar o conteúdo do canvas de desenho no canvas temporário com tamanho reduzido
-                    tempCtx.drawImage(drawingCanvas, 0, 0, 28, 28);
-                    
-                    // Obter dados de imagem
-                    const imgData = tempCtx.getImageData(0, 0, 28, 28);
-                    
-                    // Converter para tensor e pré-processar para o modelo MNIST
-                    let tensor = tf.browser.fromPixels(imgData, 1);
-                    tensor = tensor.resizeNearestNeighbor([28, 28]);
-                    tensor = tensor.toFloat();
-                    tensor = tensor.div(255.0);
-                    tensor = tensor.expandDims(0);
-                    
-                    // Fazer a previsão
-                    const predictions = await digitRecognizerModel.predict(tensor).data();
-                    
-                    // Encontrar o dígito com maior probabilidade
-                    const maxProbability = Math.max(...predictions);
-                    const digit = predictions.indexOf(maxProbability);
-                    
-                    // Adicionar o dígito à calculadora
-                    if (currentInput === '0' || shouldResetScreen) {
-                        currentInput = digit.toString();
-                        shouldResetScreen = false;
-                    } else {
-                        currentInput += digit.toString();
-                    }
-                    
-                    updateDisplay();
-                    drawingResult.textContent = `Dígito reconhecido: ${digit} (${Math.round(maxProbability * 100)}% de confiança)`;
-                    addToHistory('Reconhecimento de dígito', digit);
-                    
-                    // Liberar memória do tensor
-                    tensor.dispose();
-                } catch (error) {
-                    console.error('Erro no reconhecimento de dígito:', error);
-                    drawingResult.textContent = 'Erro no reconhecimento. Tente novamente.';
-                } finally {
-                    drawingLoading.style.display = 'none';
-                }
-            }
-            
-            // Funções de gráfico
-            function plotGraph() {
-                const equation = graphEquation.value.trim();
-                if (!equation) {
-                    alert('Digite uma equação para plotar');
-                    return;
-                }
-                
-                // Limpar gráfico anterior se existir
-                if (chart) {
-                    chart.destroy();
-                }
-                
-                // Gerar dados para o gráfico
-                const labels = [];
-                const data = [];
-                
-                // Simulação - em uma implementação real, faria parsing da equação
-                for (let x = -10; x <= 10; x += 0.5) {
-                    let y;
-                    try {
-                        // Avaliar a expressão - CUIDADO: eval é perigoso, use apenas para demonstração
-                        // Em produção, use uma biblioteca de parsing matemático seguro
-                        y = eval(equation.replace(/x/g, `(${x})`).replace(/\^/g, '**'));
-                    } catch (e) {
-                        alert('Erro na equação: ' + e.message);
-                        return;
-                    }
-                    
-                    // Verificar se y é um número válido
-                    if (isNaN(y) || !isFinite(y)) {
-                        continue;
-                    }
-                    
-                    labels.push(x);
-                    data.push(y);
-                }
-                
-                // Criar o gráfico
-                const graphCtx = graphCanvas.getContext('2d');
-                chart = new Chart(graphCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: `f(x) = ${equation}`,
-                            data: data,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1,
-                            fill: false
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                type: 'linear',
-                                position: 'center'
-                            },
-                            y: {
-                                type: 'linear',
-                                position: 'center'
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Alternar abas
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabId = tab.getAttribute('data-tab');
-                    
-                    // Desativar todas as abas
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(tc => tc.classList.remove('active'));
-                    
-                    // Ativar a aba clicada
-                    tab.classList.add('active');
-                    document.getElementById(tabId === 'history' ? 'history-tab' : tabId).classList.add('active');
-                    
-                    // Parar a câmera ao sair da aba
-                    if (tabId !== 'camera' && stream) {
-                        stopCamera();
-                    }
-                });
-            });
-            
-            // Alternar menu
-            menuButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                menu.classList.toggle('show');
-            });
-            
-            // Fechar menu ao clicar fora
-            document.addEventListener('click', function(e) {
-                if (menu.classList.contains('show') && !menu.contains(e.target) && e.target !== menuButton) {
-                    menu.classList.remove('show');
-                }
-            });
-            
-            // Atualizar display
-            function updateDisplay() {
-                display.textContent = currentInput.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            }
-            
-            // Adicionar ao histórico
-            function addToHistory(expression, result) {
-                const historyItem = { expression, result, timestamp: new Date() };
-                history.unshift(historyItem);
-                
-                // Limitar o histórico aos 50 itens mais recentes
-                if (history.length > 50) {
-                    history.pop();
-                }
-                
-                updateHistoryDisplay();
-            }
-            
-            // Atualizar a exibição do histórico
-            function updateHistoryDisplay() {
-                historyList.innerHTML = '';
-                
-                history.forEach(item => {
-                    const historyItem = document.createElement('div');
-                    historyItem.className = 'history-item';
-                    historyItem.innerHTML = `
-                        <div class="history-expression">${item.expression}</div>
-                        <div class="history-result">= ${item.result}</div>
-                        <small>${item.timestamp.toLocaleString()}</small>
-                    `;
-                    
-                    // Adicionar evento de clique para usar no cálculo
-                    historyItem.addEventListener('click', () => {
-                        currentInput = item.result;
-                        updateDisplay();
-                    });
-                    
-                    historyList.appendChild(historyItem);
-                });
-            }
-            
-            // Resetar a calculadora
-            function resetCalculator() {
-                currentInput = '0';
-                previousInput = '';
-                operation = null;
-                shouldResetScreen = false;
-                updateDisplay();
-            }
-            
-            // Apagar último dígito
-            function deleteLastDigit() {
-                if (currentInput.length === 1) {
-                    currentInput = '0';
-                } else {
-                    currentInput = currentInput.slice(0, -1);
-                }
-                updateDisplay();
-            }
-            
-            // Adicionar número
-            function appendNumber(number) {
-                if (currentInput === '0' || shouldResetScreen) {
-                    currentInput = number;
-                    shouldResetScreen = false;
-                } else {
-                    currentInput += number;
-                }
-                updateDisplay();
-            }
-            
-            // Adicionar ponto decimal
-            function appendDecimal() {
-                if (shouldResetScreen) {
-                    currentInput = '0.';
-                    shouldResetScreen = false;
-                } else if (!currentInput.includes('.')) {
-                    currentInput += '.';
-                }
-                updateDisplay();
-            }
-            
-            // Escolher operação
-            function chooseOperation(op) {
-                if (currentInput === '0') return;
-                
-                if (previousInput !== '') {
-                    compute();
-                }
-                
-                operation = op;
-                previousInput = currentInput;
-                shouldResetScreen = true;
-            }
-            
-            // Calcular resultado
-            function compute() {
-                let computation;
-                const prev = parseFloat(previousInput);
-                const current = parseFloat(currentInput);
-                
-                if (isNaN(prev) || isNaN(current)) return;
-                
-                switch (operation) {
-                    case '+':
-                        computation = prev + current;
-                        break;
-                    case '-':
-                        computation = prev - current;
-                        break;
-                    case '×':
-                        computation = prev * current;
-                        break;
-                    case '÷':
-                        if (current === 0) {
-                            alert('Não é possível dividir por zero');
-                            resetCalculator();
-                            return;
-                        }
-                        computation = prev / current;
-                        break;
-                    default:
-                        return;
-                }
-                
-                const calculation = `${previousInput} ${operation} ${currentInput}`;
-                addToHistory(calculation, computation.toString());
-                
-                currentInput = computation.toString();
-                operation = null;
-                previousInput = '';
-                shouldResetScreen = true;
-                updateDisplay();
-            }
-            
-            // Calcular porcentagem
-            function calculatePercentage() {
-                const current = parseFloat(currentInput);
-                if (isNaN(current)) return;
-                
-                currentInput = (current / 100).toString();
-                updateDisplay();
-            }
-            
-            // Alternar sinal
-            function toggleSign() {
-                currentInput = (parseFloat(currentInput) * -1).toString();
-                updateDisplay();
-            }
-            
-            // Calcular função científica
-            function calculateFunction(func) {
-                const current = parseFloat(currentInput);
-                if (isNaN(current)) return;
-                
-                let computation;
-                switch (func) {
-                    case 'sin':
-                        computation = Math.sin(current);
-                        break;
-                    case 'cos':
-                        computation = Math.cos(current);
-                        break;
-                    case 'tan':
-                        computation = Math.tan(current);
-                        break;
-                    case 'sqrt':
-                        if (current < 0) {
-                            alert('Não é possível calcular raiz quadrada de número negativo');
-                            return;
-                        }
-                        computation = Math.sqrt(current);
-                        break;
-                    case 'pow':
-                        computation = Math.pow(current, 2);
-                        break;
-                    case 'log':
-                        if (current <= 0) {
-                            alert('Não é possível calcular log de número não positivo');
-                            return;
-                        }
-                        computation = Math.log10(current);
-                        break;
-                    case 'ln':
-                        if (current <= 0) {
-                            alert('Não é possível calcular ln de número não positivo');
-                            return;
-                        }
-                        computation = Math.log(current);
-                        break;
-                    case 'exp':
-                        computation = Math.exp(current);
-                        break;
-                    case 'fact':
-                        if (current < 0 || !Number.isInteger(current)) {
-                            alert('Fatorial só é definido para inteiros não negativos');
-                            return;
-                        }
-                        computation = factorial(current);
-                        break;
-                    case 'reciprocal':
-                        if (current === 0) {
-                            alert('Não é possível calcular o inverso de zero');
-                            return;
-                        }
-                        computation = 1 / current;
-                        break;
-                    default:
-                        return;
-                }
-                
-                const calculation = `${func}(${currentInput})`;
-                addToHistory(calculation, computation.toString());
-                
-                currentInput = computation.toString();
-                shouldResetScreen = true;
-                updateDisplay();
-            }
-            
-            // Calcular fatorial
-            function factorial(n) {
-                if (n === 0 || n === 1) return 1;
-                let result = 1;
-                for (let i = 2; i <= n; i++) {
-                    result *= i;
-                }
-                return result;
-            }
-            
-            // Funções de memória
-            function memoryClear() {
-                memory = 0;
-            }
-            
-            function memoryRecall() {
-                currentInput = memory.toString();
-                updateDisplay();
-            }
-            
-            function memoryAdd() {
-                memory += parseFloat(currentInput);
-            }
-            
-            function memorySubtract() {
-                memory -= parseFloat(currentInput);
-            }
-            
-            function memoryStore() {
-                memory = parseFloat(currentInput);
-            }
-            
-            // Alternar modo científico
-            toggleScientific.addEventListener('click', function() {
-                document.querySelector('.calculator').classList.toggle('scientific-visible');
-                menu.classList.remove('show');
-            });
-            
-            // Alternar tema claro/escuro
-            themeToggle.addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                themeToggle.textContent = document.body.classList.contains('dark-mode') ? 
-                    'Modo Claro' : 'Modo Escuro';
-                menu.classList.remove('show');
-            });
-            
-            // Limpar histórico
-            clearHistoryBtn.addEventListener('click', function() {
-                history = [];
-                updateHistoryDisplay();
-                menu.classList.remove('show');
-            });
-            
-            // Event listeners para botões
-            document.querySelectorAll('[data-number]').forEach(button => {
-                button.addEventListener('click', () => {
-                    appendNumber(button.getAttribute('data-number'));
-                });
-            });
-            
-            document.querySelectorAll('[data-operator]').forEach(button => {
-                button.addEventListener('click', () => {
-                    chooseOperation(button.getAttribute('data-operator'));
-                });
-            });
-            
-            document.querySelectorAll('[data-action]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const action = button.getAttribute('data-action');
-                    
-                    switch (action) {
-                        case 'clear':
-                            resetCalculator();
-                            break;
-                        case 'delete':
-                            deleteLastDigit();
-                            break;
-                        case 'decimal':
-                            appendDecimal();
-                            break;
-                        case 'calculate':
-                            compute();
-                            break;
-                        case 'percent':
-                            calculatePercentage();
-                            break;
-                        case 'toggle-sign':
-                            toggleSign();
-                            break;
-                        case 'mc':
-                            memoryClear();
-                            break;
-                        case 'mr':
-                            memoryRecall();
-                            break;
-                        case 'm-plus':
-                            memoryAdd();
-                            break;
-                        case 'm-minus':
-                            memorySubtract();
-                            break;
-                        case 'ms':
-                            memoryStore();
-                            break;
-                    }
-                });
-            });
-            
-            document.querySelectorAll('[data-function]').forEach(button => {
-                button.addEventListener('click', () => {
-                    calculateFunction(button.getAttribute('data-function'));
-                });
-            });
-            
-            document.querySelectorAll('[data-constant]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const constant = button.getAttribute('data-constant');
-                    currentInput = constants[constant].toString();
-                    updateDisplay();
-                });
-            });
-            
-            // Event listeners para câmera
-            startCameraBtn.addEventListener('click', startCamera);
-            stopCameraBtn.addEventListener('click', stopCamera);
-            captureBtn.addEventListener('click', captureEquation);
-            
-            // Event listeners para desenho
-            recognizeDrawingBtn.addEventListener('click', recognizeDigit);
-            clearDrawingBtn.addEventListener('click', clearDrawing);
-            drawingColor.addEventListener('input', () => {
-                ctx.strokeStyle = drawingColor.value;
-            });
-            drawingSize.addEventListener('input', () => {
-                ctx.lineWidth = drawingSize.value;
-            });
-            
-            // Event listeners para gráfico
-            plotGraphBtn.addEventListener('click', plotGraph);
-            
-            // Suporte a teclado
-            document.addEventListener('keydown', event => {
-                if (/[0-9]/.test(event.key)) {
-                    appendNumber(event.key);
-                } else if (event.key === '.') {
-                    appendDecimal();
-                } else if (event.key === '+' || event.key === '-' || 
-                          (event.key === '*' && !event.shiftKey) || 
-                          (event.key === '/' && !event.shiftKey)) {
-                    let op;
-                    switch (event.key) {
-                        case '+': op = '+'; break;
-                        case '-': op = '-'; break;
-                        case '*': op = '×'; break;
-                        case '/': op = '÷'; break;
-                    }
-                    chooseOperation(op);
-                } else if (event.key === 'Enter' || event.key === '=') {
-                    event.preventDefault();
-                    compute();
-                } else if (event.key === 'Backspace') {
-                    deleteLastDigit();
-                } else if (event.key === 'Escape') {
-                    resetCalculator();
-                } else if (event.key === '%') {
-                    calculatePercentage();
-                }
-            });
-            
-            // Inicializar
-            updateDisplay();
-            initDrawingCanvas();
-            initGraphCanvas();
-            await loadTensorFlowModels();
-        });
+        }
     </script>
 </body>
 </html>
