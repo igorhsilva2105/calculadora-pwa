@@ -28,6 +28,20 @@
             flex-direction: column;
             gap: 1rem;
         }
+        
+        /* Layout básico para modo retrato (celular na vertical) */
+        .calculator-basic {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        /* Layout científico para modo paisagem (celular na horizontal) */
+        .calculator-scientific {
+            display: none;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.75rem;
+        }
 
         .display {
             background-color: #e5e7eb;
@@ -49,12 +63,6 @@
             font-size: 2rem;
             font-weight: bold;
             color: #1f2937;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
         }
 
         .btn {
@@ -101,7 +109,32 @@
             background-color: #059669;
         }
 
-        /* Responsive adjustments */
+        /* Responsive adjustments para modo paisagem */
+        @media (orientation: landscape) and (min-width: 600px) {
+            .calculator {
+                max-width: 750px;
+                flex-direction: row;
+                gap: 2rem;
+                padding: 2rem;
+            }
+
+            .display {
+                flex-grow: 1;
+            }
+
+            .calculator-basic {
+                display: none;
+            }
+
+            .calculator-scientific {
+                display: grid;
+            }
+
+            .btn {
+                padding: 0.75rem 0;
+            }
+        }
+
         @media (max-width: 480px) {
             .calculator {
                 padding: 1rem;
@@ -113,7 +146,7 @@
                 font-size: 1rem;
                 padding: 0.75rem 0;
             }
-            .grid-container {
+            .calculator-basic, .calculator-scientific {
                 gap: 0.5rem;
             }
         }
@@ -127,7 +160,46 @@
             <div id="result" class="text-3xl font-bold">0</div>
         </div>
 
-        <div class="grid-container">
+        <!-- Botões do layout científico (horizontal) -->
+        <div class="calculator-scientific">
+            <button class="btn" onclick="appendToDisplay('Math.sin(')">sin</button>
+            <button class="btn" onclick="appendToDisplay('Math.cos(')">cos</button>
+            <button class="btn" onclick="appendToDisplay('Math.tan(')">tan</button>
+            <button class="btn" onclick="appendToDisplay('Math.sqrt(')">√</button>
+            <button class="btn" onclick="appendToDisplay('(')">(</button>
+            <button class="btn" onclick="appendToDisplay(')')">)</button>
+
+            <button class="btn" onclick="appendToDisplay('Math.PI')">π</button>
+            <button class="btn" onclick="appendToDisplay('Math.E')">e</button>
+            <button class="btn" onclick="appendToDisplay('Math.log(')">log</button>
+            <button class="btn" onclick="appendToDisplay('**')">^</button>
+            <button class="btn operator" onclick="appendToDisplay('/')">/</button>
+            <button class="btn operator" onclick="appendToDisplay('*')">*</button>
+
+            <button class="btn" onclick="appendToDisplay('7')">7</button>
+            <button class="btn" onclick="appendToDisplay('8')">8</button>
+            <button class="btn" onclick="appendToDisplay('9')">9</button>
+            <button class="btn" onclick="appendToDisplay('0')">0</button>
+            <button class="btn operator" onclick="appendToDisplay('+')">+</button>
+            <button class="btn operator" onclick="appendToDisplay('-')">-</button>
+
+            <button class="btn" onclick="appendToDisplay('1')">1</button>
+            <button class="btn" onclick="appendToDisplay('2')">2</button>
+            <button class="btn" onclick="appendToDisplay('3')">3</button>
+            <button class="btn" onclick="appendToDisplay('4')">4</button>
+            <button class="btn" onclick="appendToDisplay('5')">5</button>
+            <button class="btn" onclick="appendToDisplay('6')">6</button>
+
+            <button class="btn clear" onclick="clearResult()">C</button>
+            <button class="btn clear" onclick="deleteLast()">CE</button>
+            <button class="btn equal" onclick="calculate()">=</button>
+            <button class="btn" onclick="appendToDisplay('.')">.</button>
+            <button class="btn" onclick="appendToDisplay('%')">%</button>
+            <button class="btn" onclick="appendToDisplay('-')">+/-</button>
+        </div>
+
+        <!-- Botões do layout básico (vertical) -->
+        <div class="calculator-basic">
             <button class="btn clear" onclick="clearResult()">C</button>
             <button class="btn clear" onclick="deleteLast()">CE</button>
             <button class="btn operator" onclick="appendToDisplay('%')">%</button>
@@ -177,15 +249,15 @@
         // Função para adicionar caracteres ao display
         function appendToDisplay(value) {
             // Se o resultado de uma operação anterior estiver no display, reinicia a expressão
-            if (result !== '') {
+            if (result !== '' && !['+', '-', '*', '/', '%', '(', ')', '**'].includes(value)) {
                 currentExpression = '';
                 result = '';
             }
             
             // Impede múltiplos operadores seguidos
             const lastChar = currentExpression.slice(-1);
-            const isLastCharOperator = ['+', '-', '*', '/', '%'].includes(lastChar);
-            const isNewCharOperator = ['+', '-', '*', '/', '%'].includes(value);
+            const isLastCharOperator = ['+', '-', '*', '/', '%', '(', ')', '**'].includes(lastChar);
+            const isNewCharOperator = ['+', '-', '*', '/', '%', '(', ')', '**'].includes(value);
 
             if (isLastCharOperator && isNewCharOperator) {
                 currentExpression = currentExpression.slice(0, -1) + value;
@@ -199,8 +271,8 @@
         // Função para calcular o resultado
         function calculate() {
             try {
-                // A função eval() é usada para calcular o resultado da string da expressão.
-                // É importante usar com cuidado, mas para uma calculadora simples, é eficaz.
+                // Para calcular o resultado da expressão científica, a função eval() é utilizada
+                // para interpretar a string.
                 const finalResult = eval(currentExpression);
                 historyDisplay.textContent = currentExpression + ' =';
                 resultDisplay.textContent = finalResult;
