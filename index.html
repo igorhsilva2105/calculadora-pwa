@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon-192.png" sizes="192x192">
+    <link rel="icon" href="/icon-512.png" sizes="512x512">
     <meta name="theme-color" content="#3b82f6">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
         body {
             background: linear-gradient(to bottom, #1e3a8a, #3b82f6);
@@ -319,16 +320,12 @@
             }
         });
 
-        // Register service worker for PWA
+        // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed: ', err));
             });
         }
     </script>
