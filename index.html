@@ -27,6 +27,7 @@
             --clear-bg: #ef4444;
             --clear-text: white;
             --history-bg: #f3f4f6;
+            --shadow-color: rgba(0, 0, 0, 0.2);
         }
 
         body.dark-mode {
@@ -46,6 +47,7 @@
             --clear-bg: #fc8181;
             --clear-text: white;
             --history-bg: #4a5568;
+            --shadow-color: rgba(255, 255, 255, 0.1);
         }
 
         body {
@@ -57,18 +59,19 @@
             font-family: 'Arial', sans-serif;
             color: var(--text-color);
             transition: background 0.5s ease, color 0.5s ease;
+            position: relative;
         }
-        
+
         .calculator {
             background: var(--calculator-bg);
             border-radius: 1rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px var(--shadow-color);
             padding: 1.5rem;
             max-width: 400px;
             width: 100%;
-            transition: background 0.5s ease;
+            transition: background 0.5s ease, box-shadow 0.5s ease;
         }
-        
+
         .header {
             display: flex;
             justify-content: flex-end;
@@ -76,7 +79,7 @@
             margin-bottom: 1rem;
             position: relative;
         }
-        
+
         .menu {
             cursor: pointer;
             font-size: 1.5rem;
@@ -84,7 +87,7 @@
             user-select: none;
             color: var(--text-color);
         }
-        
+
         .dropdown {
             display: none;
             position: absolute;
@@ -92,14 +95,14 @@
             right: 0;
             background: var(--calculator-bg);
             border-radius: 0.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px var(--shadow-color);
             z-index: 10;
         }
-        
+
         .dropdown.active {
             display: block;
         }
-        
+
         .dropdown button {
             display: block;
             width: 100%;
@@ -110,21 +113,22 @@
             font-size: 1rem;
             cursor: pointer;
             color: var(--text-color);
+            transition: background-color 0.3s ease;
         }
-        
+
         .dropdown button:hover {
             background: #e5e7eb;
         }
-        
+
         body.dark-mode .dropdown button:hover {
             background: #4a5568;
         }
-        
+
         .dropdown button.active {
             background: var(--operator-bg);
             color: var(--operator-text);
         }
-        
+
         .display {
             background: var(--display-bg);
             border-radius: 0.5rem;
@@ -134,53 +138,59 @@
             margin-bottom: 1rem;
             overflow-x: auto;
             white-space: nowrap;
-            scrollbar-width: none; /* Firefox */
-            transition: background 0.5s ease;
+            scrollbar-width: none;
+            transition: background 0.5s ease, box-shadow 0.3s ease;
         }
 
-        .display::-webkit-scrollbar { /* Chrome, Safari */
+        .display::-webkit-scrollbar {
             display: none;
         }
-        
+
+        .display.flash {
+            box-shadow: 0 0 10px 5px var(--equals-bg);
+        }
+
         .buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 0.5rem;
         }
-        
+
         button {
             padding: 1rem;
             font-size: 1.25rem;
             border: none;
             border-radius: 0.5rem;
             cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.5s ease, color 0.5s ease;
+            transition: transform 0.1s ease, background-color 0.5s ease, color 0.5s ease, box-shadow 0.1s ease;
+            box-shadow: 0 4px var(--shadow-color);
         }
 
         button:active {
-            transform: scale(0.95);
+            transform: translateY(2px);
+            box-shadow: 0 2px var(--shadow-color);
         }
-        
+
         .operator {
             background-color: var(--operator-bg);
             color: var(--operator-text);
         }
-        
+
         .function {
             background-color: var(--function-bg);
             color: var(--function-text);
         }
-        
+
         .number {
             background-color: var(--number-bg);
             color: var(--number-text);
         }
-        
+
         .equals {
             background-color: var(--equals-bg);
             color: var(--equals-text);
         }
-        
+
         .clear {
             background-color: var(--clear-bg);
             color: var(--clear-text);
@@ -190,7 +200,7 @@
             background: var(--history-bg);
             transition: background 0.5s ease;
         }
-        
+
         .history-item {
             cursor: pointer;
             padding: 0.5rem;
@@ -198,15 +208,15 @@
             color: var(--text-color);
             transition: background-color 0.3s ease;
         }
-        
+
         .history-item:hover {
             background-color: rgba(0, 0, 0, 0.1);
         }
-        
+
         body.dark-mode .history-item:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
-        
+
         @media (orientation: landscape) {
             .calculator {
                 max-width: 800px;
@@ -214,6 +224,27 @@
             .scientific-buttons {
                 grid-template-columns: repeat(6, 1fr) !important;
             }
+        }
+
+        /* Animação de entrada/saída */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .pwa-install-container {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--calculator-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            animation: fadeIn 0.5s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
     </style>
 </head>
@@ -257,7 +288,7 @@
             <button class="operator" onclick="appendToDisplay('+')" aria-label="Adicionar">+</button>
 
             <button class="clear" onclick="clearEntry()" aria-label="Limpar entrada">CE</button>
-            <button class="equals" onclick="calculate()" aria-label="Calcular">_</button>
+            <button class="equals" onclick="calculate()" aria-label="Calcular">=</button>
         </div>
 
         <!-- Scientific Calculator Layout -->
@@ -306,6 +337,7 @@
         let currentMode = 'basic';
         let touchstartX = 0;
         let touchendX = 0;
+        let deferredPrompt;
 
         // Histórico de cálculos
         let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
@@ -371,7 +403,7 @@
             currentExpression = currentExpression.slice(0, -1);
             display.textContent = currentExpression || '0';
         }
-        
+
         function toggleSign() {
             const lastNumberMatch = currentExpression.match(/(\d+\.?\d*)$/);
             if (lastNumberMatch) {
@@ -403,6 +435,12 @@
                     display.textContent = result;
                     saveToHistory(currentExpression, result);
                     currentExpression = result.toString();
+                    
+                    // Animação de flash no display
+                    display.classList.add('flash');
+                    setTimeout(() => {
+                        display.classList.remove('flash');
+                    }, 300);
                 }
             } catch (e) {
                 display.textContent = 'Erro';
@@ -431,14 +469,6 @@
         function isLandscape() {
             return window.innerWidth > window.innerHeight;
         }
-
-        window.addEventListener('resize', () => {
-            if (isLandscape()) {
-                switchMode('scientific');
-            } else {
-                switchMode(currentMode);
-            }
-        });
 
         // Gestos de deslizar
         document.addEventListener('touchstart', e => {
@@ -480,6 +510,33 @@
             if (!dropdown.contains(event.target) && !menu.contains(event.target)) {
                 dropdown.classList.remove('active');
             }
+        });
+
+        // Evento para o botão de instalação
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtnContainer = document.createElement('div');
+            installBtnContainer.classList.add('pwa-install-container');
+            
+            const installBtn = document.createElement('button');
+            installBtn.textContent = 'Instalar App';
+            installBtn.classList.add('px-4', 'py-2', 'bg-blue-600', 'text-white', 'rounded', 'shadow-md');
+            installBtn.onclick = () => {
+                deferredPrompt.prompt();
+                installBtnContainer.remove();
+            };
+            
+            const dismissBtn = document.createElement('button');
+            dismissBtn.textContent = 'x';
+            dismissBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+            dismissBtn.onclick = () => {
+                installBtnContainer.remove();
+            };
+            
+            installBtnContainer.appendChild(installBtn);
+            installBtnContainer.appendChild(dismissBtn);
+            document.body.appendChild(installBtnContainer);
         });
 
         // Register Service Worker for PWA
