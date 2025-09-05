@@ -246,6 +246,10 @@
             align-items: center;
             gap: 1rem;
         }
+
+        .pwa-install-container.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -260,7 +264,7 @@
             </div>
         </div>
         <div class="display" id="display" role="status" aria-live="polite">0</div>
-        
+
         <div id="history" class="hidden bg-gray-100 p-2 rounded max-h-40 overflow-y-auto mb-4">
             <ul id="historyList"></ul>
         </div>
@@ -328,6 +332,12 @@
             <button class="clear" onclick="clearEntry()" aria-label="Limpar entrada">CE</button>
             <button class="equals" onclick="calculate()" aria-label="Calcular">=</button>
         </div>
+    </div>
+
+    <!-- Botão de instalação da PWA (inicialmente oculto) -->
+    <div id="installBtnContainer" class="pwa-install-container hidden">
+        <button id="installBtn" class="px-4 py-2 bg-blue-600 text-white rounded shadow-md hover:bg-blue-700">Instalar App</button>
+        <button id="dismissBtn" class="text-gray-500 hover:text-gray-700 font-bold">x</button>
     </div>
 
     <script src="https://unpkg.com/mathjs@11.1.0/lib/browser/math.js"></script>
@@ -425,9 +435,9 @@
                     .replace(/÷/g, '/')
                     .replace(/\^/g, '**')
                     .replace(/%/g, '/100');
-                
+
                 let result = math.evaluate(formattedExpression);
-                
+
                 if (typeof result === 'number' && (isNaN(result) || !isFinite(result))) {
                     display.textContent = 'Erro';
                     currentExpression = '';
@@ -435,8 +445,7 @@
                     display.textContent = result;
                     saveToHistory(currentExpression, result);
                     currentExpression = result.toString();
-                    
-                    // Animação de flash no display
+
                     display.classList.add('flash');
                     setTimeout(() => {
                         display.classList.remove('flash');
@@ -474,12 +483,12 @@
         document.addEventListener('touchstart', e => {
             touchstartX = e.changedTouches[0].screenX;
         }, false);
-        
+
         document.addEventListener('touchend', e => {
             touchendX = e.changedTouches[0].screenX;
             handleGesture();
         }, false);
-        
+
         function handleGesture() {
             const displayElement = document.getElementById('display');
             if (Math.abs(touchendX - touchstartX) > 50) {
@@ -516,27 +525,20 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            const installBtnContainer = document.createElement('div');
-            installBtnContainer.classList.add('pwa-install-container');
-            
-            const installBtn = document.createElement('button');
-            installBtn.textContent = 'Instalar App';
-            installBtn.classList.add('px-4', 'py-2', 'bg-blue-600', 'text-white', 'rounded', 'shadow-md');
+            const installBtnContainer = document.getElementById('installBtnContainer');
+            installBtnContainer.classList.remove('hidden');
+
+            const installBtn = document.getElementById('installBtn');
+            const dismissBtn = document.getElementById('dismissBtn');
+
             installBtn.onclick = () => {
+                installBtnContainer.classList.add('hidden');
                 deferredPrompt.prompt();
-                installBtnContainer.remove();
             };
-            
-            const dismissBtn = document.createElement('button');
-            dismissBtn.textContent = 'x';
-            dismissBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+
             dismissBtn.onclick = () => {
-                installBtnContainer.remove();
+                installBtnContainer.classList.add('hidden');
             };
-            
-            installBtnContainer.appendChild(installBtn);
-            installBtnContainer.appendChild(dismissBtn);
-            document.body.appendChild(installBtnContainer);
         });
 
         // Register Service Worker for PWA
@@ -547,7 +549,7 @@
                     .catch(err => console.log('Service Worker registration failed: ', err));
             });
         }
-        
+
         // Chamadas iniciais
         checkInitialTheme();
         if (isLandscape()) {
