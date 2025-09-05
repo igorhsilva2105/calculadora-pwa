@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calculadora PWA</title>
+
+  <!-- Tailwind via CDN (podemos trocar por local depois) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/icon-192.png" sizes="192x192">
-  <link rel="icon" href="/icon-512.png" sizes="512x512">
-  <meta name="theme-color" content="#3b82f6">
+
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icon-192.png" sizes="192x192" />
+  <link rel="icon" href="/icon-512.png" sizes="512x512" />
+  <meta name="theme-color" content="#3b82f6" />
+
   <style>
+    /* === Variáveis de Tema === */
     :root {
       --bg-color: #1e3a8a;
       --gradient-end: #3b82f6;
@@ -17,19 +22,18 @@
       --display-bg: #f3f4f6;
       --text-color: #000000;
       --operator-bg: #3b82f6;
-      --operator-text: white;
+      --operator-text: #ffffff;
       --function-bg: #6b7280;
-      --function-text: white;
+      --function-text: #ffffff;
       --number-bg: #e5e7eb;
       --number-text: #000000;
       --equals-bg: #22c55e;
-      --equals-text: white;
+      --equals-text: #ffffff;
       --clear-bg: #ef4444;
-      --clear-text: white;
+      --clear-text: #ffffff;
       --history-bg: #f3f4f6;
       --shadow-color: rgba(0, 0, 0, 0.2);
     }
-
     body.dark-mode {
       --bg-color: #1a202c;
       --gradient-end: #2d3748;
@@ -37,31 +41,28 @@
       --display-bg: #4a5568;
       --text-color: #e2e8f0;
       --operator-bg: #4299e1;
-      --operator-text: white;
       --function-bg: #718096;
-      --function-text: white;
       --number-bg: #a0aec0;
       --number-text: #2d3748;
       --equals-bg: #48bb78;
-      --equals-text: white;
       --clear-bg: #fc8181;
-      --clear-text: white;
       --history-bg: #4a5568;
       --shadow-color: rgba(255, 255, 255, 0.1);
     }
 
+    /* === Layout Geral === */
     body {
       background: linear-gradient(to bottom, var(--bg-color), var(--gradient-end));
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       color: var(--text-color);
       transition: background 0.5s ease, color 0.5s ease;
       position: relative;
+      padding: 1rem;
     }
-
     .calculator {
       background: var(--calculator-bg);
       border-radius: 1rem;
@@ -69,59 +70,95 @@
       padding: 1.5rem;
       max-width: 420px;
       width: 100%;
-      transition: background 0.5s ease, box-shadow 0.5s ease;
     }
 
+    /* === Header/Menu === */
+    .header { display: flex; justify-content: flex-end; margin-bottom: 1rem; position: relative; }
+    .menu { cursor: pointer; font-size: 1.5rem; padding: 0.5rem; user-select: none; }
+    .dropdown {
+      display: none; position: absolute; top: 2.5rem; right: 0;
+      background: var(--calculator-bg); border-radius: 0.5rem;
+      box-shadow: 0 4px 8px var(--shadow-color); min-width: 180px;
+    }
+    .dropdown.active { display: block; }
+    .dropdown button {
+      display: block; width: 100%; padding: 0.5rem 1rem; border: none;
+      text-align: left; cursor: pointer; background: none;
+    }
+    .dropdown button:hover { background: #e5e7eb; }
+    body.dark-mode .dropdown button:hover { background: #4a5568; }
+    .dropdown button.active { background: var(--operator-bg); color: var(--operator-text); }
+
+    /* === Display Duplo === */
     .display {
       background: var(--display-bg);
       border-radius: 0.5rem;
-      padding: 0.5rem 1rem;
+      padding: 0.75rem 1rem;
+      text-align: right;
       margin-bottom: 1rem;
-      overflow-x: auto;
-      white-space: nowrap;
-      scrollbar-width: none;
     }
-    .display::-webkit-scrollbar { display: none; }
-    #expression-display { font-size: 1rem; color: gray; }
+    .line { overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+    .line::-webkit-scrollbar { display: none; }
+    #expression-display { font-size: 1rem; color: #6b7280; }
     #result-display { font-size: 2rem; font-weight: bold; }
+    .flash { box-shadow: 0 0 10px 5px var(--equals-bg); }
 
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.5rem;
-    }
-
+    /* === Botões === */
+    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
     button {
-      padding: 1rem;
-      font-size: 1.25rem;
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.3s ease;
+      padding: 1rem; font-size: 1.1rem; border: none; border-radius: 0.5rem;
+      cursor: pointer; transition: transform 0.1s ease, box-shadow 0.2s ease;
       box-shadow: 0 4px var(--shadow-color);
     }
-    button:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px var(--shadow-color);
-    }
-    button.glow {
-      box-shadow: 0 0 12px var(--operator-bg);
-    }
-
+    button:active { transform: translateY(2px); box-shadow: 0 2px var(--shadow-color); }
+    .glow { box-shadow: 0 0 14px var(--operator-bg), 0 4px var(--shadow-color); }
     .operator { background: var(--operator-bg); color: var(--operator-text); }
     .function { background: var(--function-bg); color: var(--function-text); }
     .number   { background: var(--number-bg); color: var(--number-text); }
     .equals   { background: var(--equals-bg); color: var(--equals-text); }
     .clear    { background: var(--clear-bg); color: var(--clear-text); }
+
+    /* Histórico */
+    #history { background: var(--history-bg); }
+    .history-item { cursor: pointer; padding: 0.5rem; border-radius: 0.25rem; }
+    .history-item:hover { background-color: rgba(0,0,0,0.1); }
+    body.dark-mode .history-item:hover { background-color: rgba(255,255,255,0.1); }
+
+    /* Instalação PWA */
+    .pwa-install-container {
+      position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+      background: var(--calculator-bg); padding: 0.5rem 1rem; border-radius: 0.5rem;
+      box-shadow: 0 4px 8px var(--shadow-color); display: flex; gap: 1rem;
+    }
+    .pwa-install-container.hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="calculator">
-    <div class="display">
-      <div id="expression-display"></div>
-      <div id="result-display">0</div>
+    <!-- Header/Menu -->
+    <div class="header">
+      <div class="menu" onclick="toggleMenu()">⋮</div>
+      <div id="dropdown" class="dropdown">
+        <button onclick="toggleHistory()">Histórico</button>
+        <button onclick="toggleDarkMode()">Modo Escuro</button>
+        <button id="soundBtn" onclick="toggleSound()">Som: Desligado</button>
+        <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
+        <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
+      </div>
     </div>
 
+    <!-- Display -->
+    <div class="display" id="display" tabindex="0" role="status" aria-live="polite">
+      <div id="expression-display" class="line"></div>
+      <div id="result-display" class="line">0</div>
+    </div>
+
+    <!-- Histórico -->
+    <div id="history" class="hidden p-2 rounded max-h-40 overflow-y-auto mb-4">
+      <ul id="historyList"></ul>
+    </div>
+
+    <!-- Layout Básico -->
     <div id="basicCalculator" class="buttons">
       <button class="number" onclick="appendToDisplay('7')">7</button>
       <button class="number" onclick="appendToDisplay('8')">8</button>
@@ -143,97 +180,236 @@
       <button class="clear" onclick="smartClear()">C</button>
       <button class="operator" onclick="appendToDisplay('+')">+</button>
 
+      <button class="clear" onclick="clearEntry()">CE</button>
+      <button class="equals" onclick="calculate()">=</button>
+    </div>
+
+    <!-- Layout Científico -->
+    <div id="scientificCalculator" class="buttons scientific-buttons" style="display: none;">
+      <button class="function" onclick="appendToDisplay('sin(')">sin</button>
+      <button class="function" onclick="appendToDisplay('cos(')">cos</button>
+      <button class="function" onclick="appendToDisplay('tan(')">tan</button>
+      <button class="function" onclick="appendToDisplay('sqrt(')">√</button>
+      <button class="function" onclick="appendToDisplay('log(')">log</button>
+      <button class="function" onclick="appendToDisplay('ln(')">ln</button>
       <button class="function" onclick="appendToDisplay('pi')">π</button>
       <button class="function" onclick="appendToDisplay('e')">e</button>
-      <button class="function" onclick="appendToDisplay('ln(')">ln</button>
+      <button class="operator" onclick="appendToDisplay('^')">^</button>
+      <button class="function" onclick="appendToDisplay('%')">%</button>
       <button class="function" onclick="appendToDisplay('!')">!</button>
-
-      <button class="equals col-span-4" onclick="calculate()">=</button>
+      <button class="function" onclick="toggleSign()">+/-</button>
     </div>
   </div>
 
+  <!-- Instalação PWA -->
+  <div id="installBtnContainer" class="pwa-install-container hidden">
+    <button id="installBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Instalar App</button>
+    <button id="dismissBtn" class="text-gray-500 font-bold">x</button>
+  </div>
+
+  <!-- Math.js -->
   <script src="https://unpkg.com/mathjs@11.1.0/lib/browser/math.js"></script>
   <script>
-    let expressionDisplay = document.getElementById("expression-display");
-    let resultDisplay = document.getElementById("result-display");
-    let currentExpression = "";
+    let currentExpression = '';
     let lastWasResult = false;
+    let soundOn = false;
+    let audioCtx = null;
 
-    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+    const expressionDisplay = document.getElementById('expression-display');
+    const resultDisplay = document.getElementById('result-display');
 
-    function playClick() {
-      audio.currentTime = 0;
-      audio.play();
+    // Histórico
+    let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+    function saveToHistory(expression, result) {
+      history.push({ expression, result });
+      if (history.length > 50) history = history.slice(-50);
+      localStorage.setItem('calcHistory', JSON.stringify(history));
+      updateHistory();
+    }
+    function updateHistory() {
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+      history.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.expression} = ${item.result}`;
+        li.classList.add('history-item');
+        li.onclick = () => {
+          currentExpression = item.expression;
+          lastWasResult = false;
+          expressionDisplay.textContent = currentExpression;
+          updateRealtimeResult();
+        };
+        list.appendChild(li);
+      });
+    }
+    function toggleHistory() {
+      document.getElementById('history').classList.toggle('hidden');
+      updateHistory();
+      document.getElementById('dropdown').classList.remove('active');
     }
 
+    // Som
+    function initAudio() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+      }
+    }
+    function playClick() {
+      if (!soundOn) return;
+      initAudio();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'square';
+      o.frequency.value = 600;
+      g.gain.value = 0.03;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      setTimeout(() => { o.stop(); }, 60);
+    }
+    function toggleSound() {
+      soundOn = !soundOn;
+      document.getElementById('soundBtn').textContent = 'Som: ' + (soundOn ? 'Ligado' : 'Desligado');
+      document.getElementById('dropdown').classList.remove('active');
+    }
+
+    // Tema
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+      document.getElementById('dropdown').classList.remove('active');
+    }
+    function checkInitialTheme() {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const stored = localStorage.getItem('darkMode');
+      if (stored === 'true' || (stored === null && prefersDark)) document.body.classList.add('dark-mode');
+    }
+
+    // Entrada
+    function formatted(expr) {
+      return expr
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/\^/g, '**')
+        .replace(/%/g, '/100')
+        .replace(/ln\(/g, 'log(')
+        .replace(/log\(/g, 'log10(')
+        .replace(/([0-9.]+)!/g, 'factorial($1)');
+    }
     function appendToDisplay(value) {
       if (lastWasResult) {
-        currentExpression = "";
+        const newInput = /^[0-9.]$/.test(value) || /^[a-z(]$/i.test(value);
+        if (newInput) currentExpression = '';
         lastWasResult = false;
       }
       currentExpression += value;
-      expressionDisplay.textContent = currentExpression;
+      expressionDisplay.textContent = currentExpression || '0';
       updateRealtimeResult();
       playClick();
     }
-
+    function clearDisplay() {
+      currentExpression = '';
+      expressionDisplay.textContent = '';
+      resultDisplay.textContent = '0';
+      lastWasResult = false;
+    }
     function smartClear() {
-      if (lastWasResult) {
-        currentExpression = "";
-        resultDisplay.textContent = "0";
-        expressionDisplay.textContent = "";
-        lastWasResult = false;
-      } else {
-        currentExpression = currentExpression.slice(0, -1);
-        expressionDisplay.textContent = currentExpression;
-        updateRealtimeResult();
-      }
+      if (lastWasResult) clearDisplay();
+      else clearEntry();
       playClick();
     }
-
+    function clearEntry() {
+      currentExpression = currentExpression.slice(0, -1);
+      expressionDisplay.textContent = currentExpression || '0';
+      updateRealtimeResult();
+    }
+    function toggleSign() {
+      const match = currentExpression.match(/(\d+\.?\d*)$/);
+      if (match) {
+        const num = match[1];
+        const newNum = num.startsWith('-') ? num.slice(1) : '-' + num;
+        currentExpression = currentExpression.slice(0, -num.length) + newNum;
+      }
+      expressionDisplay.textContent = currentExpression || '0';
+      updateRealtimeResult();
+    }
     function calculate() {
       try {
-        let expr = currentExpression
-          .replace(/×/g, "*")
-          .replace(/÷/g, "/")
-          .replace(/\^/g, "**")
-          .replace(/(\d+)!/g, "factorial($1)");
-
-        let result = math.evaluate(expr);
+        const result = math.evaluate(formatted(currentExpression));
         resultDisplay.textContent = result;
+        saveToHistory(currentExpression, result);
         currentExpression = result.toString();
         lastWasResult = true;
+        document.getElementById('display').classList.add('flash');
+        document.getElementById('display').focus();
+        setTimeout(() => document.getElementById('display').classList.remove('flash'), 300);
       } catch {
-        resultDisplay.textContent = "Erro";
-        currentExpression = "";
+        resultDisplay.textContent = 'Erro';
+        clearDisplay();
       }
       playClick();
     }
-
     function updateRealtimeResult() {
       try {
-        let expr = currentExpression
-          .replace(/×/g, "*")
-          .replace(/÷/g, "/")
-          .replace(/\^/g, "**")
-          .replace(/(\d+)!/g, "factorial($1)");
-
-        let result = math.evaluate(expr);
-        if (!isNaN(result)) {
-          resultDisplay.textContent = result;
-        }
+        const result = math.evaluate(formatted(currentExpression));
+        if (!isNaN(result)) resultDisplay.textContent = result;
       } catch {
-        resultDisplay.textContent = "0";
+        if (!lastWasResult && currentExpression === '') resultDisplay.textContent = '0';
       }
     }
 
-    // Glow effect on buttons
-    document.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        btn.classList.add("glow");
-        setTimeout(() => btn.classList.remove("glow"), 300);
+    // Menu & modos
+    function toggleMenu() {
+      document.getElementById('dropdown').classList.toggle('active');
+    }
+    function switchMode(mode) {
+      document.getElementById('basicCalculator').style.display = (mode === 'basic') ? 'grid' : 'none';
+      document.getElementById('scientificCalculator').style.display = (mode === 'scientific') ? 'grid' : 'none';
+      document.getElementById('basicBtn').classList.toggle('active', mode === 'basic');
+      document.getElementById('scientificBtn').classList.toggle('active', mode === 'scientific');
+      document.getElementById('dropdown').classList.remove('active');
+      clearDisplay();
+    }
+
+    // Eventos globais
+    document.addEventListener('keydown', e => {
+      if (/[0-9]/.test(e.key)) appendToDisplay(e.key);
+      else if (['+','-','*','/','^','%','(',')','!'].includes(e.key)) appendToDisplay(e.key);
+      else if (e.key === '.') appendToDisplay('.');
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Backspace') smartClear();
+      else if (e.key === 'Escape') clearDisplay();
+    });
+
+    // PWA Install
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtnContainer').classList.remove('hidden');
+    });
+    document.getElementById('installBtn').addEventListener('click', () => {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.finally(() => {
+        deferredPrompt = null;
+        document.getElementById('installBtnContainer').classList.add('hidden');
       });
     });
+    document.getElementById('dismissBtn').addEventListener('click', () => {
+      document.getElementById('installBtnContainer').classList.add('hidden');
+    });
+
+    // Inicialização
+    checkInitialTheme();
+    updateHistory();
+  </script>
+
+  <!-- Registrar Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .catch(err => console.error('SW registration failed:', err));
+    }
   </script>
 </body>
 </html>
