@@ -140,11 +140,17 @@
         <div class="header">
             <div class="menu" onclick="toggleMenu()">⋮</div>
             <div id="dropdown" class="dropdown">
+                <button onclick="toggleHistory()">Histórico</button>
                 <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
                 <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
             </div>
         </div>
         <div class="display" id="display">0</div>
+        <!-- History List -->
+        <div id="history" class="hidden bg-gray-100 p-2 rounded max-h-40 overflow-y-auto mb-4">
+            <ul id="historyList"></ul>
+        </div>
+
 
         <!-- Basic Calculator Layout -->
         <div id="basicCalculator" class="buttons">
@@ -253,6 +259,7 @@
                 } else {
                     display.textContent = result;
                     currentExpression = result.toString();
+                    saveToHistory(currentExpression, result);
                 }
             } catch {
                 display.textContent = 'Error';
@@ -319,6 +326,41 @@
                 dropdown.classList.remove('active');
             }
         });
+        // Variável para armazenar o histórico
+        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+
+        function saveToHistory(expression, result) {
+             history.push({ expression, result });
+             localStorage.setItem('calcHistory', JSON.stringify(history));
+             updateHistory();
+         }
+
+         function updateHistory() {
+             const historyList = document.getElementById('historyList');
+             historyList.innerHTML = '';
+             history.forEach(item => {
+                 const li = document.createElement('li');
+                 li.textContent = `${item.expression} = ${item.result}`;
+                 li.classList.add('p-1', 'hover:bg-gray-200', 'cursor-pointer', 'rounded');
+                 li.onclick = () => {
+                 currentExpression = item.expression;
+                 display.textContent = currentExpression;
+                toggleHistory(); // Fecha o histórico após a seleção
+             };
+             historyList.appendChild(li);
+             });
+          }
+
+function toggleHistory() {
+    const historyDiv = document.getElementById('history');
+    historyDiv.classList.toggle('hidden');
+    updateHistory(); // Atualiza o histórico sempre que ele for aberto
+    const dropdown = document.getElementById('dropdown');
+    dropdown.classList.remove('active'); // Fecha o menu
+}
+
+// Chame updateHistory() na carga inicial para popular o histórico se existir
+window.addEventListener('load', updateHistory);
 
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
