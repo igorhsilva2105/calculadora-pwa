@@ -1,31 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Calculator</title>
+    <title>Calculadora PWA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/icon-192.png" sizes="192x192">
     <link rel="icon" href="/icon-512.png" sizes="512x512">
     <meta name="theme-color" content="#3b82f6">
     <style>
+        :root {
+            --bg-color: #1e3a8a;
+            --gradient-end: #3b82f6;
+            --calculator-bg: #ffffff;
+            --display-bg: #f3f4f6;
+            --text-color: #000000;
+            --operator-bg: #3b82f6;
+            --operator-text: white;
+            --function-bg: #6b7280;
+            --function-text: white;
+            --number-bg: #e5e7eb;
+            --number-text: #000000;
+            --equals-bg: #22c55e;
+            --equals-text: white;
+            --clear-bg: #ef4444;
+            --clear-text: white;
+            --history-bg: #f3f4f6;
+        }
+
+        body.dark-mode {
+            --bg-color: #1a202c;
+            --gradient-end: #2d3748;
+            --calculator-bg: #2d3748;
+            --display-bg: #4a5568;
+            --text-color: #e2e8f0;
+            --operator-bg: #4299e1;
+            --operator-text: white;
+            --function-bg: #718096;
+            --function-text: white;
+            --number-bg: #a0aec0;
+            --number-text: #2d3748;
+            --equals-bg: #48bb78;
+            --equals-text: white;
+            --clear-bg: #fc8181;
+            --clear-text: white;
+            --history-bg: #4a5568;
+        }
+
         body {
-            background: linear-gradient(to bottom, #1e3a8a, #3b82f6);
+            background: linear-gradient(to bottom, var(--bg-color), var(--gradient-end));
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Arial', sans-serif;
+            color: var(--text-color);
+            transition: background 0.5s ease, color 0.5s ease;
         }
+        
         .calculator {
-            background: #ffffff;
+            background: var(--calculator-bg);
             border-radius: 1rem;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             padding: 1.5rem;
             max-width: 400px;
             width: 100%;
+            transition: background 0.5s ease;
         }
+        
         .header {
             display: flex;
             justify-content: flex-end;
@@ -33,24 +76,30 @@
             margin-bottom: 1rem;
             position: relative;
         }
+        
         .menu {
             cursor: pointer;
             font-size: 1.5rem;
             padding: 0.5rem;
+            user-select: none;
+            color: var(--text-color);
         }
+        
         .dropdown {
             display: none;
             position: absolute;
             top: 2.5rem;
             right: 0;
-            background: #ffffff;
+            background: var(--calculator-bg);
             border-radius: 0.5rem;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             z-index: 10;
         }
+        
         .dropdown.active {
             display: block;
         }
+        
         .dropdown button {
             display: block;
             width: 100%;
@@ -60,71 +109,104 @@
             border: none;
             font-size: 1rem;
             cursor: pointer;
+            color: var(--text-color);
         }
+        
         .dropdown button:hover {
             background: #e5e7eb;
         }
-        .dropdown button.active {
-            background: #3b82f6;
-            color: white;
+        
+        body.dark-mode .dropdown button:hover {
+            background: #4a5568;
         }
+        
+        .dropdown button.active {
+            background: var(--operator-bg);
+            color: var(--operator-text);
+        }
+        
         .display {
-            background: #f3f4f6;
+            background: var(--display-bg);
             border-radius: 0.5rem;
             padding: 1rem;
             font-size: 2rem;
             text-align: right;
             margin-bottom: 1rem;
             overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none; /* Firefox */
+            transition: background 0.5s ease;
         }
+
+        .display::-webkit-scrollbar { /* Chrome, Safari */
+            display: none;
+        }
+        
         .buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 0.5rem;
         }
+        
         button {
             padding: 1rem;
             font-size: 1.25rem;
             border: none;
             border-radius: 0.5rem;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .operator {
-            background-color: #3b82f6;
-            color: white;
-        }
-        .operator:hover {
-            background-color: #2563eb;
-        }
-        .function {
-            background-color: #6b7280;
-            color: white;
-        }
-        .function:hover {
-            background-color: #4b5563;
-        }
-        .number {
-            background-color: #e5e7eb;
-        }
-        .number:hover {
-            background-color: #d1d5db;
-        }
-        .equals {
-            background-color: #22c55e;
-            color: white;
-        }
-        .equals:hover {
-            background-color: #16a34a;
-        }
-        .clear {
-            background-color: #ef4444;
-            color: white;
-        }
-        .clear:hover {
-            background-color: #dc2626;
+            transition: transform 0.1s ease, background-color 0.5s ease, color 0.5s ease;
         }
 
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .operator {
+            background-color: var(--operator-bg);
+            color: var(--operator-text);
+        }
+        
+        .function {
+            background-color: var(--function-bg);
+            color: var(--function-text);
+        }
+        
+        .number {
+            background-color: var(--number-bg);
+            color: var(--number-text);
+        }
+        
+        .equals {
+            background-color: var(--equals-bg);
+            color: var(--equals-text);
+        }
+        
+        .clear {
+            background-color: var(--clear-bg);
+            color: var(--clear-text);
+        }
+
+        #history {
+            background: var(--history-bg);
+            transition: background 0.5s ease;
+        }
+        
+        .history-item {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            color: var(--text-color);
+            transition: background-color 0.3s ease;
+        }
+        
+        .history-item:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        body.dark-mode .history-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
         @media (orientation: landscape) {
             .calculator {
                 max-width: 800px;
@@ -138,95 +220,144 @@
 <body>
     <div class="calculator">
         <div class="header">
-            <div class="menu" onclick="toggleMenu()">⋮</div>
+            <div class="menu" onclick="toggleMenu()" aria-label="Abrir menu de opções" role="button">⋮</div>
             <div id="dropdown" class="dropdown">
                 <button onclick="toggleHistory()">Histórico</button>
+                <button onclick="toggleDarkMode()">Modo Escuro</button>
                 <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
                 <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
             </div>
         </div>
-        <div class="display" id="display">0</div>
-        <!-- History List -->
+        <div class="display" id="display" role="status" aria-live="polite">0</div>
+        
         <div id="history" class="hidden bg-gray-100 p-2 rounded max-h-40 overflow-y-auto mb-4">
             <ul id="historyList"></ul>
         </div>
 
-
         <!-- Basic Calculator Layout -->
         <div id="basicCalculator" class="buttons">
-            <button class="number" onclick="appendToDisplay('7')">7</button>
-            <button class="number" onclick="appendToDisplay('8')">8</button>
-            <button class="number" onclick="appendToDisplay('9')">9</button>
-            <button class="operator" onclick="appendToDisplay('/')">/</button>
+            <button class="number" onclick="appendToDisplay('7')" aria-label="Número 7">7</button>
+            <button class="number" onclick="appendToDisplay('8')" aria-label="Número 8">8</button>
+            <button class="number" onclick="appendToDisplay('9')" aria-label="Número 9">9</button>
+            <button class="operator" onclick="appendToDisplay('/')" aria-label="Dividir">÷</button>
 
-            <button class="number" onclick="appendToDisplay('4')">4</button>
-            <button class="number" onclick="appendToDisplay('5')">5</button>
-            <button class="number" onclick="appendToDisplay('6')">6</button>
-            <button class="operator" onclick="appendToDisplay('*')">*</button>
+            <button class="number" onclick="appendToDisplay('4')" aria-label="Número 4">4</button>
+            <button class="number" onclick="appendToDisplay('5')" aria-label="Número 5">5</button>
+            <button class="number" onclick="appendToDisplay('6')" aria-label="Número 6">6</button>
+            <button class="operator" onclick="appendToDisplay('*')" aria-label="Multiplicar">×</button>
 
-            <button class="number" onclick="appendToDisplay('1')">1</button>
-            <button class="number" onclick="appendToDisplay('2')">2</button>
-            <button class="number" onclick="appendToDisplay('3')">3</button>
-            <button class="operator" onclick="appendToDisplay('-')">-</button>
+            <button class="number" onclick="appendToDisplay('1')" aria-label="Número 1">1</button>
+            <button class="number" onclick="appendToDisplay('2')" aria-label="Número 2">2</button>
+            <button class="number" onclick="appendToDisplay('3')" aria-label="Número 3">3</button>
+            <button class="operator" onclick="appendToDisplay('-')" aria-label="Subtrair">-</button>
 
-            <button class="number" onclick="appendToDisplay('0')">0</button>
-            <button class="number" onclick="appendToDisplay('.')">.</button>
-            <button class="clear" onclick="clearDisplay()">C</button>
-            <button class="operator" onclick="appendToDisplay('+')">+</button>
+            <button class="number" onclick="appendToDisplay('0')" aria-label="Número 0">0</button>
+            <button class="number" onclick="appendToDisplay('.')" aria-label="Ponto">.</button>
+            <button class="clear" onclick="clearDisplay()" aria-label="Limpar">C</button>
+            <button class="operator" onclick="appendToDisplay('+')" aria-label="Adicionar">+</button>
 
-            <button class="clear" onclick="clearEntry()">CE</button>
-            <button class="equals" onclick="calculate()">=</button>
+            <button class="clear" onclick="clearEntry()" aria-label="Limpar entrada">CE</button>
+            <button class="equals" onclick="calculate()" aria-label="Calcular">_</button>
         </div>
 
         <!-- Scientific Calculator Layout -->
         <div id="scientificCalculator" class="buttons scientific-buttons" style="display: none;">
-            <button class="function" onclick="appendToDisplay('sin(')">sin</button>
-            <button class="function" onclick="appendToDisplay('cos(')">cos</button>
-            <button class="function" onclick="appendToDisplay('tan(')">tan</button>
-            <button class="function" onclick="appendToDisplay('sqrt(')">√</button>
-            <button class="function" onclick="appendToDisplay('log(')">log</button>
-            <button class="function" onclick="appendToDisplay('(')">(</button>
+            <button class="function" onclick="appendToDisplay('sin(')" aria-label="Seno">sin</button>
+            <button class="function" onclick="appendToDisplay('cos(')" aria-label="Cosseno">cos</button>
+            <button class="function" onclick="appendToDisplay('tan(')" aria-label="Tangente">tan</button>
+            <button class="function" onclick="appendToDisplay('sqrt(')" aria-label="Raiz quadrada">√</button>
+            <button class="function" onclick="appendToDisplay('log(')" aria-label="Logaritmo">log</button>
+            <button class="function" onclick="appendToDisplay('(')" aria-label="Abrir parêntese">(</button>
 
-            <button class="function" onclick="appendToDisplay(')')">)</button>
-            <button class="function" onclick="appendToDisplay('pi')">π</button>
-            <button class="function" onclick="appendToDisplay('e')">e</button>
-            <button class="operator" onclick="appendToDisplay('^')">^</button>
-            <button class="function" onclick="appendToDisplay('%')">%</button>
-            <button class="function" onclick="toggleSign()">+/-</button>
+            <button class="function" onclick="appendToDisplay(')')" aria-label="Fechar parêntese">)</button>
+            <button class="function" onclick="appendToDisplay('pi')" aria-label="Pi">π</button>
+            <button class="function" onclick="appendToDisplay('e')" aria-label="E">e</button>
+            <button class="operator" onclick="appendToDisplay('^')" aria-label="Potência">^</button>
+            <button class="function" onclick="appendToDisplay('%')" aria-label="Porcentagem">%</button>
+            <button class="function" onclick="toggleSign()" aria-label="Alternar sinal">+/-</button>
 
-            <button class="number" onclick="appendToDisplay('7')">7</button>
-            <button class="number" onclick="appendToDisplay('8')">8</button>
-            <button class="number" onclick="appendToDisplay('9')">9</button>
-            <button class="operator" onclick="appendToDisplay('/')">/</button>
-            <button class="operator" onclick="appendToDisplay('*')">*</button>
-            <button class="operator" onclick="appendToDisplay('-')">-</button>
+            <button class="number" onclick="appendToDisplay('7')" aria-label="Número 7">7</button>
+            <button class="number" onclick="appendToDisplay('8')" aria-label="Número 8">8</button>
+            <button class="number" onclick="appendToDisplay('9')" aria-label="Número 9">9</button>
+            <button class="operator" onclick="appendToDisplay('/')" aria-label="Dividir">÷</button>
+            <button class="operator" onclick="appendToDisplay('*')" aria-label="Multiplicar">×</button>
+            <button class="operator" onclick="appendToDisplay('-')" aria-label="Subtrair">-</button>
 
-            <button class="number" onclick="appendToDisplay('4')">4</button>
-            <button class="number" onclick="appendToDisplay('5')">5</button>
-            <button class="number" onclick="appendToDisplay('6')">6</button>
-            <button class="number" onclick="appendToDisplay('1')">1</button>
-            <button class="number" onclick="appendToDisplay('2')">2</button>
-            <button class="number" onclick="appendToDisplay('3')">3</button>
+            <button class="number" onclick="appendToDisplay('4')" aria-label="Número 4">4</button>
+            <button class="number" onclick="appendToDisplay('5')" aria-label="Número 5">5</button>
+            <button class="number" onclick="appendToDisplay('6')" aria-label="Número 6">6</button>
+            <button class="number" onclick="appendToDisplay('1')" aria-label="Número 1">1</button>
+            <button class="number" onclick="appendToDisplay('2')" aria-label="Número 2">2</button>
+            <button class="number" onclick="appendToDisplay('3')" aria-label="Número 3">3</button>
 
-            <button class="number" onclick="appendToDisplay('0')">0</button>
-            <button class="number" onclick="appendToDisplay('.')">.</button>
-            <button class="operator" onclick="appendToDisplay('+')">+</button>
-            <button class="clear" onclick="clearDisplay()">C</button>
-            <button class="clear" onclick="clearEntry()">CE</button>
-            <button class="equals" onclick="calculate()">=</button>
+            <button class="number" onclick="appendToDisplay('0')" aria-label="Número 0">0</button>
+            <button class="number" onclick="appendToDisplay('.')" aria-label="Ponto">.</button>
+            <button class="operator" onclick="appendToDisplay('+')" aria-label="Adicionar">+</button>
+            <button class="clear" onclick="clearDisplay()" aria-label="Limpar">C</button>
+            <button class="clear" onclick="clearEntry()" aria-label="Limpar entrada">CE</button>
+            <button class="equals" onclick="calculate()" aria-label="Calcular">=</button>
         </div>
     </div>
 
+    <script src="https://unpkg.com/mathjs@11.1.0/lib/browser/math.js"></script>
     <script>
         let display = document.getElementById('display');
         let currentExpression = '';
         let currentMode = 'basic';
+        let touchstartX = 0;
+        let touchendX = 0;
+
+        // Histórico de cálculos
+        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+
+        function saveToHistory(expression, result) {
+            history.push({ expression, result });
+            localStorage.setItem('calcHistory', JSON.stringify(history));
+            updateHistory();
+        }
+
+        function updateHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.expression} = ${item.result}`;
+                li.classList.add('history-item');
+                li.onclick = () => {
+                    currentExpression = item.expression;
+                    display.textContent = currentExpression;
+                    toggleHistory();
+                };
+                historyList.appendChild(li);
+            });
+        }
+
+        function toggleHistory() {
+            const historyDiv = document.getElementById('history');
+            historyDiv.classList.toggle('hidden');
+            updateHistory();
+            const dropdown = document.getElementById('dropdown');
+            dropdown.classList.remove('active');
+        }
+
+        // Modo Escuro
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            document.getElementById('dropdown').classList.remove('active');
+        }
+
+        function checkInitialTheme() {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const storedPreference = localStorage.getItem('darkMode');
+
+            if (storedPreference === 'true' || (storedPreference === null && prefersDark)) {
+                document.body.classList.add('dark-mode');
+            }
+        }
 
         function appendToDisplay(value) {
-            if (value === 'pi') value = 'Math.PI';
-            if (value === 'e') value = 'Math.E';
-            if (value === 'sqrt(') value = 'Math.sqrt(';
-            if (value === 'log(') value = 'Math.log10(';
             currentExpression += value;
             display.textContent = currentExpression || '0';
         }
@@ -240,29 +371,41 @@
             currentExpression = currentExpression.slice(0, -1);
             display.textContent = currentExpression || '0';
         }
-
+        
         function toggleSign() {
-            if (currentExpression.startsWith('-')) {
-                currentExpression = currentExpression.slice(1);
-            } else {
-                currentExpression = '-' + currentExpression;
+            const lastNumberMatch = currentExpression.match(/(\d+\.?\d*)$/);
+            if (lastNumberMatch) {
+                const lastNumber = lastNumberMatch[1];
+                const newNumber = lastNumber.startsWith('-') ? lastNumber.slice(1) : '-' + lastNumber;
+                currentExpression = currentExpression.slice(0, -lastNumber.length) + newNumber;
+            } else if (currentExpression === '' || currentExpression === '0') {
+                currentExpression = '-';
+            } else if (currentExpression === '-') {
+                currentExpression = '';
             }
             display.textContent = currentExpression || '0';
         }
 
         function calculate() {
             try {
-                let result = eval(currentExpression.replace('^', '**').replace('%', '/100'));
-                if (isNaN(result) || !isFinite(result)) {
-                    display.textContent = 'Error';
+                let formattedExpression = currentExpression
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/\^/g, '**')
+                    .replace(/%/g, '/100');
+                
+                let result = math.evaluate(formattedExpression);
+                
+                if (typeof result === 'number' && (isNaN(result) || !isFinite(result))) {
+                    display.textContent = 'Erro';
                     currentExpression = '';
                 } else {
                     display.textContent = result;
-                    currentExpression = result.toString();
                     saveToHistory(currentExpression, result);
+                    currentExpression = result.toString();
                 }
-            } catch {
-                display.textContent = 'Error';
+            } catch (e) {
+                display.textContent = 'Erro';
                 currentExpression = '';
             }
         }
@@ -274,37 +417,49 @@
 
         function switchMode(mode) {
             if (isLandscape()) {
-                mode = 'scientific'; // Force scientific in landscape
+                mode = 'scientific';
             }
             currentMode = mode;
             document.getElementById('basicCalculator').style.display = mode === 'basic' ? 'grid' : 'none';
             document.getElementById('scientificCalculator').style.display = mode === 'scientific' ? 'grid' : 'none';
             document.getElementById('basicBtn').classList.toggle('active', mode === 'basic');
             document.getElementById('scientificBtn').classList.toggle('active', mode === 'scientific');
-            document.getElementById('dropdown').classList.remove('active'); // Close dropdown
-            clearDisplay(); // Reset on switch
+            document.getElementById('dropdown').classList.remove('active');
+            clearDisplay();
         }
 
         function isLandscape() {
             return window.innerWidth > window.innerHeight;
         }
 
-        // Handle orientation change
         window.addEventListener('resize', () => {
             if (isLandscape()) {
                 switchMode('scientific');
             } else {
-                // In portrait, keep current mode or default to basic
                 switchMode(currentMode);
             }
         });
 
-        // Initial check
-        if (isLandscape()) {
-            switchMode('scientific');
+        // Gestos de deslizar
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        }, false);
+        
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleGesture();
+        }, false);
+        
+        function handleGesture() {
+            const displayElement = document.getElementById('display');
+            if (Math.abs(touchendX - touchstartX) > 50) {
+                if (touchendX < touchstartX) { // Deslizar para a esquerda
+                    clearEntry();
+                }
+            }
         }
 
-        // Keyboard support
+        // Suporte de teclado
         document.addEventListener('keydown', (event) => {
             const key = event.key;
             if (/[0-9]/.test(key)) appendToDisplay(key);
@@ -318,7 +473,7 @@
             else if (key === 'Backspace') clearEntry();
         });
 
-        // Close dropdown when clicking outside
+        // Fecha o menu ao clicar fora
         document.addEventListener('click', (event) => {
             const dropdown = document.getElementById('dropdown');
             const menu = document.querySelector('.menu');
@@ -326,41 +481,6 @@
                 dropdown.classList.remove('active');
             }
         });
-        // Variável para armazenar o histórico
-        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
-
-        function saveToHistory(expression, result) {
-             history.push({ expression, result });
-             localStorage.setItem('calcHistory', JSON.stringify(history));
-             updateHistory();
-         }
-
-         function updateHistory() {
-             const historyList = document.getElementById('historyList');
-             historyList.innerHTML = '';
-             history.forEach(item => {
-                 const li = document.createElement('li');
-                 li.textContent = `${item.expression} = ${item.result}`;
-                 li.classList.add('p-1', 'hover:bg-gray-200', 'cursor-pointer', 'rounded');
-                 li.onclick = () => {
-                 currentExpression = item.expression;
-                 display.textContent = currentExpression;
-                toggleHistory(); // Fecha o histórico após a seleção
-             };
-             historyList.appendChild(li);
-             });
-          }
-
-function toggleHistory() {
-    const historyDiv = document.getElementById('history');
-    historyDiv.classList.toggle('hidden');
-    updateHistory(); // Atualiza o histórico sempre que ele for aberto
-    const dropdown = document.getElementById('dropdown');
-    dropdown.classList.remove('active'); // Fecha o menu
-}
-
-// Chame updateHistory() na carga inicial para popular o histórico se existir
-window.addEventListener('load', updateHistory);
 
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
@@ -369,6 +489,12 @@ window.addEventListener('load', updateHistory);
                     .then(reg => console.log('Service Worker registered'))
                     .catch(err => console.log('Service Worker registration failed: ', err));
             });
+        }
+        
+        // Chamadas iniciais
+        checkInitialTheme();
+        if (isLandscape()) {
+            switchMode('scientific');
         }
     </script>
 </body>
