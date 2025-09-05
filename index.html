@@ -24,17 +24,43 @@
         }
         .header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             margin-bottom: 1rem;
+            position: relative;
         }
-        .header button {
-            background: #e5e7eb;
-            padding: 0.5rem 1rem;
+        .menu {
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 2.5rem;
+            right: 0;
+            background: #ffffff;
             border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        .dropdown.active {
+            display: block;
+        }
+        .dropdown button {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            background: none;
+            border: none;
+            font-size: 1rem;
             cursor: pointer;
         }
-        .header button.active {
+        .dropdown button:hover {
+            background: #e5e7eb;
+        }
+        .dropdown button.active {
             background: #3b82f6;
             color: white;
         }
@@ -108,9 +134,11 @@
 <body>
     <div class="calculator">
         <div class="header">
-            <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
-            <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
-            <div class="menu">⋮</div> <!-- Três pontos como menu placeholder -->
+            <div class="menu" onclick="toggleMenu()">⋮</div>
+            <div id="dropdown" class="dropdown">
+                <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
+                <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
+            </div>
         </div>
         <div class="display" id="display">0</div>
 
@@ -228,6 +256,11 @@
             }
         }
 
+        function toggleMenu() {
+            const dropdown = document.getElementById('dropdown');
+            dropdown.classList.toggle('active');
+        }
+
         function switchMode(mode) {
             if (isLandscape()) {
                 mode = 'scientific'; // Force scientific in landscape
@@ -237,6 +270,7 @@
             document.getElementById('scientificCalculator').style.display = mode === 'scientific' ? 'grid' : 'none';
             document.getElementById('basicBtn').classList.toggle('active', mode === 'basic');
             document.getElementById('scientificBtn').classList.toggle('active', mode === 'scientific');
+            document.getElementById('dropdown').classList.remove('active'); // Close dropdown
             clearDisplay(); // Reset on switch
         }
 
@@ -271,6 +305,15 @@
             else if (key === 'Enter') calculate();
             else if (key === 'Escape') clearDisplay();
             else if (key === 'Backspace') clearEntry();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            const dropdown = document.getElementById('dropdown');
+            const menu = document.querySelector('.menu');
+            if (!dropdown.contains(event.target) && !menu.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
         });
     </script>
 </body>
