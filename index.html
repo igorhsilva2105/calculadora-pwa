@@ -22,6 +22,22 @@
             max-width: 400px;
             width: 100%;
         }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .header button {
+            background: #e5e7eb;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .header button.active {
+            background: #3b82f6;
+            color: white;
+        }
         .display {
             background: #f3f4f6;
             border-radius: 0.5rem;
@@ -78,55 +94,95 @@
         .clear:hover {
             background-color: #dc2626;
         }
+
+        @media (orientation: landscape) {
+            .calculator {
+                max-width: 800px;
+            }
+            .scientific-buttons {
+                grid-template-columns: repeat(6, 1fr) !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="calculator">
+        <div class="header">
+            <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
+            <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
+            <div class="menu">⋮</div> <!-- Três pontos como menu placeholder -->
+        </div>
         <div class="display" id="display">0</div>
-        <div class="buttons">
+
+        <!-- Basic Calculator Layout -->
+        <div id="basicCalculator" class="buttons">
+            <button class="number" onclick="appendToDisplay('7')">7</button>
+            <button class="number" onclick="appendToDisplay('8')">8</button>
+            <button class="number" onclick="appendToDisplay('9')">9</button>
+            <button class="operator" onclick="appendToDisplay('/')">/</button>
+
+            <button class="number" onclick="appendToDisplay('4')">4</button>
+            <button class="number" onclick="appendToDisplay('5')">5</button>
+            <button class="number" onclick="appendToDisplay('6')">6</button>
+            <button class="operator" onclick="appendToDisplay('*')">*</button>
+
+            <button class="number" onclick="appendToDisplay('1')">1</button>
+            <button class="number" onclick="appendToDisplay('2')">2</button>
+            <button class="number" onclick="appendToDisplay('3')">3</button>
+            <button class="operator" onclick="appendToDisplay('-')">-</button>
+
+            <button class="number" onclick="appendToDisplay('0')">0</button>
+            <button class="number" onclick="appendToDisplay('.')">.</button>
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="operator" onclick="appendToDisplay('+')">+</button>
+
+            <button class="clear" onclick="clearEntry()">CE</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+
+        <!-- Scientific Calculator Layout -->
+        <div id="scientificCalculator" class="buttons scientific-buttons" style="display: none;">
             <button class="function" onclick="appendToDisplay('sin(')">sin</button>
             <button class="function" onclick="appendToDisplay('cos(')">cos</button>
             <button class="function" onclick="appendToDisplay('tan(')">tan</button>
             <button class="function" onclick="appendToDisplay('sqrt(')">√</button>
-            
+            <button class="function" onclick="appendToDisplay('log(')">log</button>
             <button class="function" onclick="appendToDisplay('(')">(</button>
+
             <button class="function" onclick="appendToDisplay(')')">)</button>
             <button class="function" onclick="appendToDisplay('pi')">π</button>
             <button class="function" onclick="appendToDisplay('e')">e</button>
-            
-            <button class="function" onclick="appendToDisplay('log(')">log</button>
             <button class="operator" onclick="appendToDisplay('^')">^</button>
-            <button class="operator" onclick="appendToDisplay('/')">/</button>
-            <button class="operator" onclick="appendToDisplay('*')">*</button>
-            
+            <button class="function" onclick="appendToDisplay('%')">%</button>
+            <button class="function" onclick="toggleSign()">+/-</button>
+
             <button class="number" onclick="appendToDisplay('7')">7</button>
             <button class="number" onclick="appendToDisplay('8')">8</button>
             <button class="number" onclick="appendToDisplay('9')">9</button>
+            <button class="operator" onclick="appendToDisplay('/')">/</button>
+            <button class="operator" onclick="appendToDisplay('*')">*</button>
             <button class="operator" onclick="appendToDisplay('-')">-</button>
-            
+
             <button class="number" onclick="appendToDisplay('4')">4</button>
             <button class="number" onclick="appendToDisplay('5')">5</button>
             <button class="number" onclick="appendToDisplay('6')">6</button>
-            <button class="operator" onclick="appendToDisplay('+')">+</button>
-            
             <button class="number" onclick="appendToDisplay('1')">1</button>
             <button class="number" onclick="appendToDisplay('2')">2</button>
             <button class="number" onclick="appendToDisplay('3')">3</button>
-            <button class="clear" onclick="clearDisplay()">C</button>
-            
+
             <button class="number" onclick="appendToDisplay('0')">0</button>
             <button class="number" onclick="appendToDisplay('.')">.</button>
-            <button class="equals" onclick="calculate()">=</button>
+            <button class="operator" onclick="appendToDisplay('+')">+</button>
+            <button class="clear" onclick="clearDisplay()">C</button>
             <button class="clear" onclick="clearEntry()">CE</button>
-            
-            <button class="function" onclick="toggleSign()">+/-</button>
-            <button class="function" onclick="appendToDisplay('%')">%</button>
+            <button class="equals" onclick="calculate()">=</button>
         </div>
     </div>
 
     <script>
         let display = document.getElementById('display');
         let currentExpression = '';
+        let currentMode = 'basic';
 
         function appendToDisplay(value) {
             if (value === 'pi') value = 'Math.PI';
@@ -158,7 +214,7 @@
 
         function calculate() {
             try {
-                let result = eval(currentExpression.replace('^', '**'));
+                let result = eval(currentExpression.replace('^', '**').replace('%', '/100'));
                 if (isNaN(result) || !isFinite(result)) {
                     display.textContent = 'Error';
                     currentExpression = '';
@@ -170,6 +226,37 @@
                 display.textContent = 'Error';
                 currentExpression = '';
             }
+        }
+
+        function switchMode(mode) {
+            if (isLandscape()) {
+                mode = 'scientific'; // Force scientific in landscape
+            }
+            currentMode = mode;
+            document.getElementById('basicCalculator').style.display = mode === 'basic' ? 'grid' : 'none';
+            document.getElementById('scientificCalculator').style.display = mode === 'scientific' ? 'grid' : 'none';
+            document.getElementById('basicBtn').classList.toggle('active', mode === 'basic');
+            document.getElementById('scientificBtn').classList.toggle('active', mode === 'scientific');
+            clearDisplay(); // Reset on switch
+        }
+
+        function isLandscape() {
+            return window.innerWidth > window.innerHeight;
+        }
+
+        // Handle orientation change
+        window.addEventListener('resize', () => {
+            if (isLandscape()) {
+                switchMode('scientific');
+            } else {
+                // In portrait, keep current mode or default to basic
+                switchMode(currentMode);
+            }
+        });
+
+        // Initial check
+        if (isLandscape()) {
+            switchMode('scientific');
         }
 
         // Keyboard support
