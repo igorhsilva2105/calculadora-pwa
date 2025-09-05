@@ -1,560 +1,239 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora PWA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/icon-192.png" sizes="192x192">
-    <link rel="icon" href="/icon-512.png" sizes="512x512">
-    <meta name="theme-color" content="#3b82f6">
-    <style>
-        :root {
-            --bg-color: #1e3a8a;
-            --gradient-end: #3b82f6;
-            --calculator-bg: #ffffff;
-            --display-bg: #f3f4f6;
-            --text-color: #000000;
-            --operator-bg: #3b82f6;
-            --operator-text: white;
-            --function-bg: #6b7280;
-            --function-text: white;
-            --number-bg: #e5e7eb;
-            --number-text: #000000;
-            --equals-bg: #22c55e;
-            --equals-text: white;
-            --clear-bg: #ef4444;
-            --clear-text: white;
-            --history-bg: #f3f4f6;
-            --shadow-color: rgba(0, 0, 0, 0.2);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora PWA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192.png" sizes="192x192">
+  <link rel="icon" href="/icon-512.png" sizes="512x512">
+  <meta name="theme-color" content="#3b82f6">
+  <style>
+    :root {
+      --bg-color: #1e3a8a;
+      --gradient-end: #3b82f6;
+      --calculator-bg: #ffffff;
+      --display-bg: #f3f4f6;
+      --text-color: #000000;
+      --operator-bg: #3b82f6;
+      --operator-text: white;
+      --function-bg: #6b7280;
+      --function-text: white;
+      --number-bg: #e5e7eb;
+      --number-text: #000000;
+      --equals-bg: #22c55e;
+      --equals-text: white;
+      --clear-bg: #ef4444;
+      --clear-text: white;
+      --history-bg: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.2);
+    }
 
-        body.dark-mode {
-            --bg-color: #1a202c;
-            --gradient-end: #2d3748;
-            --calculator-bg: #2d3748;
-            --display-bg: #4a5568;
-            --text-color: #e2e8f0;
-            --operator-bg: #4299e1;
-            --operator-text: white;
-            --function-bg: #718096;
-            --function-text: white;
-            --number-bg: #a0aec0;
-            --number-text: #2d3748;
-            --equals-bg: #48bb78;
-            --equals-text: white;
-            --clear-bg: #fc8181;
-            --clear-text: white;
-            --history-bg: #4a5568;
-            --shadow-color: rgba(255, 255, 255, 0.1);
-        }
+    body.dark-mode {
+      --bg-color: #1a202c;
+      --gradient-end: #2d3748;
+      --calculator-bg: #2d3748;
+      --display-bg: #4a5568;
+      --text-color: #e2e8f0;
+      --operator-bg: #4299e1;
+      --operator-text: white;
+      --function-bg: #718096;
+      --function-text: white;
+      --number-bg: #a0aec0;
+      --number-text: #2d3748;
+      --equals-bg: #48bb78;
+      --equals-text: white;
+      --clear-bg: #fc8181;
+      --clear-text: white;
+      --history-bg: #4a5568;
+      --shadow-color: rgba(255, 255, 255, 0.1);
+    }
 
-        body {
-            background: linear-gradient(to bottom, var(--bg-color), var(--gradient-end));
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Arial', sans-serif;
-            color: var(--text-color);
-            transition: background 0.5s ease, color 0.5s ease;
-            position: relative;
-        }
+    body {
+      background: linear-gradient(to bottom, var(--bg-color), var(--gradient-end));
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Arial', sans-serif;
+      color: var(--text-color);
+      transition: background 0.5s ease, color 0.5s ease;
+      position: relative;
+    }
 
-        .calculator {
-            background: var(--calculator-bg);
-            border-radius: 1rem;
-            box-shadow: 0 10px 20px var(--shadow-color);
-            padding: 1.5rem;
-            max-width: 400px;
-            width: 100%;
-            transition: background 0.5s ease, box-shadow 0.5s ease;
-        }
+    .calculator {
+      background: var(--calculator-bg);
+      border-radius: 1rem;
+      box-shadow: 0 10px 20px var(--shadow-color);
+      padding: 1.5rem;
+      max-width: 420px;
+      width: 100%;
+      transition: background 0.5s ease, box-shadow 0.5s ease;
+    }
 
-        .header {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-bottom: 1rem;
-            position: relative;
-        }
+    .display {
+      background: var(--display-bg);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .display::-webkit-scrollbar { display: none; }
+    #expression-display { font-size: 1rem; color: gray; }
+    #result-display { font-size: 2rem; font-weight: bold; }
 
-        .menu {
-            cursor: pointer;
-            font-size: 1.5rem;
-            padding: 0.5rem;
-            user-select: none;
-            color: var(--text-color);
-        }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
 
-        .dropdown {
-            display: none;
-            position: absolute;
-            top: 2.5rem;
-            right: 0;
-            background: var(--calculator-bg);
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px var(--shadow-color);
-            z-index: 10;
-        }
+    button {
+      padding: 1rem;
+      font-size: 1.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px var(--shadow-color);
+    }
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px var(--shadow-color);
+    }
+    button.glow {
+      box-shadow: 0 0 12px var(--operator-bg);
+    }
 
-        .dropdown.active {
-            display: block;
-        }
-
-        .dropdown button {
-            display: block;
-            width: 100%;
-            padding: 0.5rem 1rem;
-            text-align: left;
-            background: none;
-            border: none;
-            font-size: 1rem;
-            cursor: pointer;
-            color: var(--text-color);
-            transition: background-color 0.3s ease;
-        }
-
-        .dropdown button:hover {
-            background: #e5e7eb;
-        }
-
-        body.dark-mode .dropdown button:hover {
-            background: #4a5568;
-        }
-
-        .dropdown button.active {
-            background: var(--operator-bg);
-            color: var(--operator-text);
-        }
-
-        .display {
-            background: var(--display-bg);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            font-size: 2rem;
-            text-align: right;
-            margin-bottom: 1rem;
-            overflow-x: auto;
-            white-space: nowrap;
-            scrollbar-width: none;
-            transition: background 0.5s ease, box-shadow 0.3s ease;
-        }
-
-        .display::-webkit-scrollbar {
-            display: none;
-        }
-
-        .display.flash {
-            box-shadow: 0 0 10px 5px var(--equals-bg);
-        }
-
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-        }
-
-        button {
-            padding: 1rem;
-            font-size: 1.25rem;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.5s ease, color 0.5s ease, box-shadow 0.1s ease;
-            box-shadow: 0 4px var(--shadow-color);
-        }
-
-        button:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px var(--shadow-color);
-        }
-
-        .operator {
-            background-color: var(--operator-bg);
-            color: var(--operator-text);
-        }
-
-        .function {
-            background-color: var(--function-bg);
-            color: var(--function-text);
-        }
-
-        .number {
-            background-color: var(--number-bg);
-            color: var(--number-text);
-        }
-
-        .equals {
-            background-color: var(--equals-bg);
-            color: var(--equals-text);
-        }
-
-        .clear {
-            background-color: var(--clear-bg);
-            color: var(--clear-text);
-        }
-
-        #history {
-            background: var(--history-bg);
-            transition: background 0.5s ease;
-        }
-
-        .history-item {
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            color: var(--text-color);
-            transition: background-color 0.3s ease;
-        }
-
-        .history-item:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        body.dark-mode .history-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        @media (orientation: landscape) {
-            .calculator {
-                max-width: 800px;
-            }
-            .scientific-buttons {
-                grid-template-columns: repeat(6, 1fr) !important;
-            }
-        }
-
-        /* Animação de entrada/saída */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .pwa-install-container {
-            position: absolute;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--calculator-bg);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px var(--shadow-color);
-            animation: fadeIn 0.5s ease;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .pwa-install-container.hidden {
-            display: none;
-        }
-    </style>
+    .operator { background: var(--operator-bg); color: var(--operator-text); }
+    .function { background: var(--function-bg); color: var(--function-text); }
+    .number   { background: var(--number-bg); color: var(--number-text); }
+    .equals   { background: var(--equals-bg); color: var(--equals-text); }
+    .clear    { background: var(--clear-bg); color: var(--clear-text); }
+  </style>
 </head>
 <body>
-    <div class="calculator">
-        <div class="header">
-            <div class="menu" onclick="toggleMenu()" aria-label="Abrir menu de opções" role="button">⋮</div>
-            <div id="dropdown" class="dropdown">
-                <button onclick="toggleHistory()">Histórico</button>
-                <button onclick="toggleDarkMode()">Modo Escuro</button>
-                <button id="basicBtn" class="active" onclick="switchMode('basic')">Básica</button>
-                <button id="scientificBtn" onclick="switchMode('scientific')">Científica</button>
-            </div>
-        </div>
-        <div class="display" id="display" role="status" aria-live="polite">0</div>
-
-        <div id="history" class="hidden bg-gray-100 p-2 rounded max-h-40 overflow-y-auto mb-4">
-            <ul id="historyList"></ul>
-        </div>
-
-        <!-- Basic Calculator Layout -->
-        <div id="basicCalculator" class="buttons">
-            <button class="number" onclick="appendToDisplay('7')" aria-label="Número 7">7</button>
-            <button class="number" onclick="appendToDisplay('8')" aria-label="Número 8">8</button>
-            <button class="number" onclick="appendToDisplay('9')" aria-label="Número 9">9</button>
-            <button class="operator" onclick="appendToDisplay('/')" aria-label="Dividir">÷</button>
-
-            <button class="number" onclick="appendToDisplay('4')" aria-label="Número 4">4</button>
-            <button class="number" onclick="appendToDisplay('5')" aria-label="Número 5">5</button>
-            <button class="number" onclick="appendToDisplay('6')" aria-label="Número 6">6</button>
-            <button class="operator" onclick="appendToDisplay('*')" aria-label="Multiplicar">×</button>
-
-            <button class="number" onclick="appendToDisplay('1')" aria-label="Número 1">1</button>
-            <button class="number" onclick="appendToDisplay('2')" aria-label="Número 2">2</button>
-            <button class="number" onclick="appendToDisplay('3')" aria-label="Número 3">3</button>
-            <button class="operator" onclick="appendToDisplay('-')" aria-label="Subtrair">-</button>
-
-            <button class="number" onclick="appendToDisplay('0')" aria-label="Número 0">0</button>
-            <button class="number" onclick="appendToDisplay('.')" aria-label="Ponto">.</button>
-            <button class="clear" onclick="clearDisplay()" aria-label="Limpar">C</button>
-            <button class="operator" onclick="appendToDisplay('+')" aria-label="Adicionar">+</button>
-
-            <button class="clear" onclick="clearEntry()" aria-label="Limpar entrada">CE</button>
-            <button class="equals" onclick="calculate()" aria-label="Calcular">=</button>
-        </div>
-
-        <!-- Scientific Calculator Layout -->
-        <div id="scientificCalculator" class="buttons scientific-buttons" style="display: none;">
-            <button class="function" onclick="appendToDisplay('sin(')" aria-label="Seno">sin</button>
-            <button class="function" onclick="appendToDisplay('cos(')" aria-label="Cosseno">cos</button>
-            <button class="function" onclick="appendToDisplay('tan(')" aria-label="Tangente">tan</button>
-            <button class="function" onclick="appendToDisplay('sqrt(')" aria-label="Raiz quadrada">√</button>
-            <button class="function" onclick="appendToDisplay('log(')" aria-label="Logaritmo">log</button>
-            <button class="function" onclick="appendToDisplay('(')" aria-label="Abrir parêntese">(</button>
-
-            <button class="function" onclick="appendToDisplay(')')" aria-label="Fechar parêntese">)</button>
-            <button class="function" onclick="appendToDisplay('pi')" aria-label="Pi">π</button>
-            <button class="function" onclick="appendToDisplay('e')" aria-label="E">e</button>
-            <button class="operator" onclick="appendToDisplay('^')" aria-label="Potência">^</button>
-            <button class="function" onclick="appendToDisplay('%')" aria-label="Porcentagem">%</button>
-            <button class="function" onclick="toggleSign()" aria-label="Alternar sinal">+/-</button>
-
-            <button class="number" onclick="appendToDisplay('7')" aria-label="Número 7">7</button>
-            <button class="number" onclick="appendToDisplay('8')" aria-label="Número 8">8</button>
-            <button class="number" onclick="appendToDisplay('9')" aria-label="Número 9">9</button>
-            <button class="operator" onclick="appendToDisplay('/')" aria-label="Dividir">÷</button>
-            <button class="operator" onclick="appendToDisplay('*')" aria-label="Multiplicar">×</button>
-            <button class="operator" onclick="appendToDisplay('-')" aria-label="Subtrair">-</button>
-
-            <button class="number" onclick="appendToDisplay('4')" aria-label="Número 4">4</button>
-            <button class="number" onclick="appendToDisplay('5')" aria-label="Número 5">5</button>
-            <button class="number" onclick="appendToDisplay('6')" aria-label="Número 6">6</button>
-            <button class="number" onclick="appendToDisplay('1')" aria-label="Número 1">1</button>
-            <button class="number" onclick="appendToDisplay('2')" aria-label="Número 2">2</button>
-            <button class="number" onclick="appendToDisplay('3')" aria-label="Número 3">3</button>
-
-            <button class="number" onclick="appendToDisplay('0')" aria-label="Número 0">0</button>
-            <button class="number" onclick="appendToDisplay('.')" aria-label="Ponto">.</button>
-            <button class="operator" onclick="appendToDisplay('+')" aria-label="Adicionar">+</button>
-            <button class="clear" onclick="clearDisplay()" aria-label="Limpar">C</button>
-            <button class="clear" onclick="clearEntry()" aria-label="Limpar entrada">CE</button>
-            <button class="equals" onclick="calculate()" aria-label="Calcular">=</button>
-        </div>
+  <div class="calculator">
+    <div class="display">
+      <div id="expression-display"></div>
+      <div id="result-display">0</div>
     </div>
 
-    <!-- Botão de instalação da PWA (inicialmente oculto) -->
-    <div id="installBtnContainer" class="pwa-install-container hidden">
-        <button id="installBtn" class="px-4 py-2 bg-blue-600 text-white rounded shadow-md hover:bg-blue-700">Instalar App</button>
-        <button id="dismissBtn" class="text-gray-500 hover:text-gray-700 font-bold">x</button>
+    <div id="basicCalculator" class="buttons">
+      <button class="number" onclick="appendToDisplay('7')">7</button>
+      <button class="number" onclick="appendToDisplay('8')">8</button>
+      <button class="number" onclick="appendToDisplay('9')">9</button>
+      <button class="operator" onclick="appendToDisplay('/')">÷</button>
+
+      <button class="number" onclick="appendToDisplay('4')">4</button>
+      <button class="number" onclick="appendToDisplay('5')">5</button>
+      <button class="number" onclick="appendToDisplay('6')">6</button>
+      <button class="operator" onclick="appendToDisplay('*')">×</button>
+
+      <button class="number" onclick="appendToDisplay('1')">1</button>
+      <button class="number" onclick="appendToDisplay('2')">2</button>
+      <button class="number" onclick="appendToDisplay('3')">3</button>
+      <button class="operator" onclick="appendToDisplay('-')">-</button>
+
+      <button class="number" onclick="appendToDisplay('0')">0</button>
+      <button class="number" onclick="appendToDisplay('.')">.</button>
+      <button class="clear" onclick="smartClear()">C</button>
+      <button class="operator" onclick="appendToDisplay('+')">+</button>
+
+      <button class="function" onclick="appendToDisplay('pi')">π</button>
+      <button class="function" onclick="appendToDisplay('e')">e</button>
+      <button class="function" onclick="appendToDisplay('ln(')">ln</button>
+      <button class="function" onclick="appendToDisplay('!')">!</button>
+
+      <button class="equals col-span-4" onclick="calculate()">=</button>
     </div>
+  </div>
 
-    <script src="https://unpkg.com/mathjs@11.1.0/lib/browser/math.js"></script>
-    <script>
-        let display = document.getElementById('display');
-        let currentExpression = '';
-        let currentMode = 'basic';
-        let touchstartX = 0;
-        let touchendX = 0;
-        let deferredPrompt;
+  <script src="https://unpkg.com/mathjs@11.1.0/lib/browser/math.js"></script>
+  <script>
+    let expressionDisplay = document.getElementById("expression-display");
+    let resultDisplay = document.getElementById("result-display");
+    let currentExpression = "";
+    let lastWasResult = false;
 
-        // Histórico de cálculos
-        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+    const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
 
-        function saveToHistory(expression, result) {
-            history.push({ expression, result });
-            localStorage.setItem('calcHistory', JSON.stringify(history));
-            updateHistory();
+    function playClick() {
+      audio.currentTime = 0;
+      audio.play();
+    }
+
+    function appendToDisplay(value) {
+      if (lastWasResult) {
+        currentExpression = "";
+        lastWasResult = false;
+      }
+      currentExpression += value;
+      expressionDisplay.textContent = currentExpression;
+      updateRealtimeResult();
+      playClick();
+    }
+
+    function smartClear() {
+      if (lastWasResult) {
+        currentExpression = "";
+        resultDisplay.textContent = "0";
+        expressionDisplay.textContent = "";
+        lastWasResult = false;
+      } else {
+        currentExpression = currentExpression.slice(0, -1);
+        expressionDisplay.textContent = currentExpression;
+        updateRealtimeResult();
+      }
+      playClick();
+    }
+
+    function calculate() {
+      try {
+        let expr = currentExpression
+          .replace(/×/g, "*")
+          .replace(/÷/g, "/")
+          .replace(/\^/g, "**")
+          .replace(/(\d+)!/g, "factorial($1)");
+
+        let result = math.evaluate(expr);
+        resultDisplay.textContent = result;
+        currentExpression = result.toString();
+        lastWasResult = true;
+      } catch {
+        resultDisplay.textContent = "Erro";
+        currentExpression = "";
+      }
+      playClick();
+    }
+
+    function updateRealtimeResult() {
+      try {
+        let expr = currentExpression
+          .replace(/×/g, "*")
+          .replace(/÷/g, "/")
+          .replace(/\^/g, "**")
+          .replace(/(\d+)!/g, "factorial($1)");
+
+        let result = math.evaluate(expr);
+        if (!isNaN(result)) {
+          resultDisplay.textContent = result;
         }
+      } catch {
+        resultDisplay.textContent = "0";
+      }
+    }
 
-        function updateHistory() {
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-            history.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = `${item.expression} = ${item.result}`;
-                li.classList.add('history-item');
-                li.onclick = () => {
-                    currentExpression = item.expression;
-                    display.textContent = currentExpression;
-                    toggleHistory();
-                };
-                historyList.appendChild(li);
-            });
-        }
-
-        function toggleHistory() {
-            const historyDiv = document.getElementById('history');
-            historyDiv.classList.toggle('hidden');
-            updateHistory();
-            const dropdown = document.getElementById('dropdown');
-            dropdown.classList.remove('active');
-        }
-
-        // Modo Escuro
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDarkMode);
-            document.getElementById('dropdown').classList.remove('active');
-        }
-
-        function checkInitialTheme() {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const storedPreference = localStorage.getItem('darkMode');
-
-            if (storedPreference === 'true' || (storedPreference === null && prefersDark)) {
-                document.body.classList.add('dark-mode');
-            }
-        }
-
-        function appendToDisplay(value) {
-            currentExpression += value;
-            display.textContent = currentExpression || '0';
-        }
-
-        function clearDisplay() {
-            currentExpression = '';
-            display.textContent = '0';
-        }
-
-        function clearEntry() {
-            currentExpression = currentExpression.slice(0, -1);
-            display.textContent = currentExpression || '0';
-        }
-
-        function toggleSign() {
-            const lastNumberMatch = currentExpression.match(/(\d+\.?\d*)$/);
-            if (lastNumberMatch) {
-                const lastNumber = lastNumberMatch[1];
-                const newNumber = lastNumber.startsWith('-') ? lastNumber.slice(1) : '-' + lastNumber;
-                currentExpression = currentExpression.slice(0, -lastNumber.length) + newNumber;
-            } else if (currentExpression === '' || currentExpression === '0') {
-                currentExpression = '-';
-            } else if (currentExpression === '-') {
-                currentExpression = '';
-            }
-            display.textContent = currentExpression || '0';
-        }
-
-        function calculate() {
-            try {
-                let formattedExpression = currentExpression
-                    .replace(/×/g, '*')
-                    .replace(/÷/g, '/')
-                    .replace(/\^/g, '**')
-                    .replace(/%/g, '/100');
-
-                let result = math.evaluate(formattedExpression);
-
-                if (typeof result === 'number' && (isNaN(result) || !isFinite(result))) {
-                    display.textContent = 'Erro';
-                    currentExpression = '';
-                } else {
-                    display.textContent = result;
-                    saveToHistory(currentExpression, result);
-                    currentExpression = result.toString();
-
-                    display.classList.add('flash');
-                    setTimeout(() => {
-                        display.classList.remove('flash');
-                    }, 300);
-                }
-            } catch (e) {
-                display.textContent = 'Erro';
-                currentExpression = '';
-            }
-        }
-
-        function toggleMenu() {
-            const dropdown = document.getElementById('dropdown');
-            dropdown.classList.toggle('active');
-        }
-
-        function switchMode(mode) {
-            if (isLandscape()) {
-                mode = 'scientific';
-            }
-            currentMode = mode;
-            document.getElementById('basicCalculator').style.display = mode === 'basic' ? 'grid' : 'none';
-            document.getElementById('scientificCalculator').style.display = mode === 'scientific' ? 'grid' : 'none';
-            document.getElementById('basicBtn').classList.toggle('active', mode === 'basic');
-            document.getElementById('scientificBtn').classList.toggle('active', mode === 'scientific');
-            document.getElementById('dropdown').classList.remove('active');
-            clearDisplay();
-        }
-
-        function isLandscape() {
-            return window.innerWidth > window.innerHeight;
-        }
-
-        // Gestos de deslizar
-        document.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-        }, false);
-
-        document.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            handleGesture();
-        }, false);
-
-        function handleGesture() {
-            const displayElement = document.getElementById('display');
-            if (Math.abs(touchendX - touchstartX) > 50) {
-                if (touchendX < touchstartX) { // Deslizar para a esquerda
-                    clearEntry();
-                }
-            }
-        }
-
-        // Suporte de teclado
-        document.addEventListener('keydown', (event) => {
-            const key = event.key;
-            if (/[0-9]/.test(key)) appendToDisplay(key);
-            else if (key === '+') appendToDisplay('+');
-            else if (key === '-') appendToDisplay('-');
-            else if (key === '*') appendToDisplay('*');
-            else if (key === '/') appendToDisplay('/');
-            else if (key === '.') appendToDisplay('.');
-            else if (key === 'Enter') calculate();
-            else if (key === 'Escape') clearDisplay();
-            else if (key === 'Backspace') clearEntry();
-        });
-
-        // Fecha o menu ao clicar fora
-        document.addEventListener('click', (event) => {
-            const dropdown = document.getElementById('dropdown');
-            const menu = document.querySelector('.menu');
-            if (!dropdown.contains(event.target) && !menu.contains(event.target)) {
-                dropdown.classList.remove('active');
-            }
-        });
-
-        // Evento para o botão de instalação
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const installBtnContainer = document.getElementById('installBtnContainer');
-            installBtnContainer.classList.remove('hidden');
-
-            const installBtn = document.getElementById('installBtn');
-            const dismissBtn = document.getElementById('dismissBtn');
-
-            installBtn.onclick = () => {
-                installBtnContainer.classList.add('hidden');
-                deferredPrompt.prompt();
-            };
-
-            dismissBtn.onclick = () => {
-                installBtnContainer.classList.add('hidden');
-            };
-        });
-
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed: ', err));
-            });
-        }
-
-        // Chamadas iniciais
-        checkInitialTheme();
-        if (isLandscape()) {
-            switchMode('scientific');
-        }
-    </script>
+    // Glow effect on buttons
+    document.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        btn.classList.add("glow");
+        setTimeout(() => btn.classList.remove("glow"), 300);
+      });
+    });
+  </script>
 </body>
 </html>
